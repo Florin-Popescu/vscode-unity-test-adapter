@@ -1,19 +1,19 @@
 {
-  "name": "vscode-example-test-adapter",
-  "displayName": "Example Test Explorer",
-  "description": "Run your Example tests in the Sidebar of Visual Studio Code",
+  "name": "vscode-unity-test-adapter",
+  "displayName": "Unity Framework for C Test Explorer",
+  "description": "Run your Unity tests in the Sidebar of Visual Studio Code",
   "icon": "img/icon.png",
-  "author": "Holger Benl <hbenl@evandor.de>",
-  "publisher": "hbenl",
+  "author": "Florin Popescu",
+  "publisher": "fpopescu",
   "version": "0.0.1",
   "license": "MIT",
-  "homepage": "https://github.com/hbenl/vscode-example-test-adapter",
+  "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hbenl/vscode-example-test-adapter.git"
+    "url": "https://github.com/Florin-Popescu/vscode-unity-test-adapter.git"
   },
   "bugs": {
-    "url": "https://github.com/hbenl/vscode-example-test-adapter/issues"
+    "url": "https://github.com/Florin-Popescu/vscode-unity-test-adapter/issues"
   },
   "categories": [
     "Other"
@@ -32,6 +32,8 @@
     "publish": "vsce publish"
   },
   "dependencies": {
+    "async-mutex": "^0.1.4",
+    "tree-kill": "^1.2.2",
     "tslib": "^1.9.3",
     "vscode-test-adapter-api": "^1.7.0",
     "vscode-test-adapter-util": "^0.7.0"
@@ -53,15 +55,52 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "Example Test Explorer configuration",
+      "title": "Unity Test Explorer",
       "properties": {
-        "exampleExplorer.logpanel": {
-          "description": "write diagnotic logs to an output panel",
-          "type": "boolean",
+        "unityExplorer.debugConfiguration": {
+          "description": "Debug configuration to run during test debug",
+          "type": "string",
           "scope": "resource"
         },
-        "exampleExplorer.logfile": {
-          "description": "write diagnostic logs to the given file",
+        "unityExplorer.foldersCommandArgs": {
+          "markdownDescription": "The command line arguments used to run the make target to create folders needed for the output",
+          "type": "string",
+          "scope": "resource"
+        },
+		"unityExplorer.makeCwdPath": {
+			"description": "Path to run make in",
+			"type": "string",
+			"scope": "resource"
+		},
+        "unityExplorer.prettyTestFileLabel": {
+          "markdownDescription": "Make test file asier to read in the test explorer, by removing its prefix, path and file type. E.g. inactive `test/LEDs/test_BlinkTask.c`, active `BlinkTask`",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
+        "unityExplorer.prettyTestLabel": {
+          "markdownDescription": "Make test label easier to read in the test explorer, by removing its prefix. E.g. inactive `test_BlinkTaskShouldToggleLed`, active `BlinkTaskShouldToggleLed`",
+          "type": "boolean",
+          "default": false,
+          "scope": "resource"
+        },
+        "unityExplorer.projectSourcePath": {
+          "description": "Path to the project source files",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildCommandArgs": {
+          "markdownDescription": "The command line arguments used to run the make target to build a test",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildPath": {
+          "description": "Path to the test build output files",
+          "type": "string",
+          "scope": "resource"
+		},
+        "unityExplorer.testSourcePath": {
+          "description": "Path to the project test source files",
           "type": "string",
           "scope": "resource"
         }
