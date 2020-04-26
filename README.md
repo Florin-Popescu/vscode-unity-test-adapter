@@ -1,7 +1,7 @@
-# C Unity Framework Test Adapter for Visual Studio Code
-
-## Warning!
+## Disclaimer
 This extension is for the C Unit Test Framework by [ThrowTheSwitch.org](http://www.throwtheswitch.org/), not for the Video Engine.
+
+# C Unity Framework Test Adapter for Visual Studio Code
 
 Run your [Unity](http://www.throwtheswitch.org/unity) tests using the
 [Test Explorer](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer) extension.
