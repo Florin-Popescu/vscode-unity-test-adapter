@@ -23,7 +23,7 @@ export class UnityAdapter implements TestAdapter {
 	private readonly testsEmitter = new vscode.EventEmitter<TestLoadStartedEvent | TestLoadFinishedEvent>();
 	private readonly testStatesEmitter = new vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>();
 	private readonly autorunEmitter = new vscode.EventEmitter<void>();
-	
+
     private watchedFileForAutorunList: string[] = [];
     private watchedFileForReloadList: string[] = [];
     private testSuiteInfo: TestSuiteInfo = {
@@ -37,31 +37,13 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildPath: string = '.';
 	private testBuildCommandArgs: string = '';
 	private foldersCommandArgs: string = '';
-    private isPrettyTestLabelEnable: boolean = false;
-    private isPrettyTestFileLabelEnable: boolean = false;
-	private headerExtension: string = 'h';
-	private sourceExtension: string = 'c';
-	private testFunctionPrefix: string = 'test_';
-	private testFileSuffix: string = '_test';
+	private prettyTestCaseRegex: string = '.*';
+	private prettyTestFileRegex: string = '.*';
+	private sourceFileRegex: string = '.h.c';
+	private testCaseRegex: string = '';
+	private testFileRegex: string = '';
 	private makeCwdPath: string = '.';
 	private readonly testResultString = ':(PASS|(FAIL: (.*)))';
-	private readonly sourceFileRegex = new RegExp(
-		`.*\.[(${this.headerExtension})(${this.sourceExtension})]`,
-	);
-	private readonly testSourceRegex = new RegExp(
-		`.*${this.testFileSuffix}\.${this.sourceExtension}`,
-	);
-	private readonly testNameRegex = new RegExp(
-		`^\\s*void\\s+(${this.testFunctionPrefix})(.*)(?:\\\\\\s+)*.*\\s*\\(\\s*(.*)\\s*\\)`,
-		'gm'
-	);
-	private readonly testLabelRegex = new RegExp(
-		`^(${this.testFunctionPrefix})(.*)`
-	);
-	private readonly fileLabelRegex = new RegExp(
-		`(\\w:.*[\\/\\\\])(.*)(${this.testFileSuffix})(\\.c)`,
-		'i'
-	);
 	private makeProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
     private makeMutex: async_mutex.Mutex = new async_mutex.Mutex();
@@ -77,42 +59,54 @@ export class UnityAdapter implements TestAdapter {
 		this.disposables.push(this.testsEmitter);
 		this.disposables.push(this.testStatesEmitter);
 		this.disposables.push(this.autorunEmitter);
-		
-		this.isPrettyTestLabelEnable = this.getConfigurationBoolean('prettyTestLabel');
-		this.isPrettyTestFileLabelEnable = this.getConfigurationBoolean('prettyTestFileLabel');
-		this.projectSourcePath = this.getConfigurationPath('projectSourcePath');
-		this.testSourcePath = this.getConfigurationPath('testSourcePath');
-		this.testBuildPath = this.getConfigurationString('testBuildPath');
-		this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
+
 		this.foldersCommandArgs = this.getConfigurationString('foldersCommandArgs');
 		this.makeCwdPath = this.getConfigurationPath('makeCwdPath');
-		
+		this.prettyTestCaseRegex = this.getConfigurationString('prettyTestCaseRegex');
+		this.prettyTestFileRegex = this.getConfigurationString('prettyTestFileRegex');
+		this.projectSourcePath = this.getConfigurationPath('projectSourcePath');
+		this.sourceFileRegex = this.getConfigurationString('sourceFileRegex');
+		this.testBuildPath = this.getConfigurationString('testBuildPath');
+		this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
+		this.testCaseRegex = this.getConfigurationString('testCaseRegex');
+		this.testFileRegex = this.getConfigurationString('testFileRegex');
+		this.testSourcePath = this.getConfigurationPath('testSourcePath');
+
         // callback when a config property is modified
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('unityExplorer.prettyTestLabel')) {
-				this.isPrettyTestLabelEnable = this.getConfigurationBoolean('prettyTestLabel');
-            }
-            if (event.affectsConfiguration('unityExplorer.prettyTestFileLabel')) {
-				this.isPrettyTestFileLabelEnable = this.getConfigurationBoolean('prettyTestFileLabel');
-            }
-            if (event.affectsConfiguration('unityExplorer.projectSourcePath')) {
-				this.projectSourcePath = this.getConfigurationPath('projectSourcePath');
-            }
-            if (event.affectsConfiguration('unityExplorer.testSourcePath')) {
-				this.testSourcePath = this.getConfigurationPath('testSourcePath');
-            }
-            if (event.affectsConfiguration('unityExplorer.testBuildPath')) {
-				this.testBuildPath = this.getConfigurationString('testBuildPath');
-			}
-            if (event.affectsConfiguration('unityExplorer.testBuildCommandArgs')) {
-				this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
-			}
             if (event.affectsConfiguration('unityExplorer.foldersCommandArgs')) {
 				this.foldersCommandArgs = this.getConfigurationString('foldersCommandArgs');
 			}
             if (event.affectsConfiguration('unityExplorer.makeCwdPath')) {
 				this.makeCwdPath = this.getConfigurationPath('makeCwdPath');
 			}
+            if (event.affectsConfiguration('unityExplorer.prettyTestCaseRegex')) {
+				this.prettyTestCaseRegex = this.getConfigurationString('prettyTestCaseRegex');
+            }
+            if (event.affectsConfiguration('unityExplorer.prettyTestFileRegex')) {
+				this.prettyTestFileRegex = this.getConfigurationString('prettyTestFileRegex');
+            }
+            if (event.affectsConfiguration('unityExplorer.projectSourcePath')) {
+				this.projectSourcePath = this.getConfigurationPath('projectSourcePath');
+            }
+            if (event.affectsConfiguration('unityExplorer.sourceFileRegex')) {
+				this.sourceFileRegex = this.getConfigurationString('sourceFileRegex');
+			}
+            if (event.affectsConfiguration('unityExplorer.testBuildPath')) {
+				this.testBuildPath = this.getConfigurationString('testBuildPath');
+			}
+            if (event.affectsConfiguration('unityExplorer.testBuildCommandArgs')) {
+				this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
+			}
+            if (event.affectsConfiguration('unityExplorer.testCaseRegex')) {
+				this.testCaseRegex = this.getConfigurationString('testCaseRegex');
+			}
+            if (event.affectsConfiguration('unityExplorer.testFileRegex')) {
+				this.testFileRegex = this.getConfigurationString('testFileRegex');
+			}
+            if (event.affectsConfiguration('unityExplorer.testSourcePath')) {
+				this.testSourcePath = this.getConfigurationPath('testSourcePath');
+            }
 			this.load();
         })
 	}
@@ -120,9 +114,15 @@ export class UnityAdapter implements TestAdapter {
 	async load(): Promise<void> {
 		this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-		const sourceFiles = await this.getFileList(this.projectSourcePath, this.sourceFileRegex);
-        const testFiles = await this.getFileList(this.testSourcePath, this.testSourceRegex);
-		
+		const sourceFiles = await this.getFileList(this.projectSourcePath, new RegExp(this.sourceFileRegex));
+		const testFiles = await this.getFileList(this.testSourcePath, new RegExp(this.testFileRegex));
+
+		for (const file of testFiles) {
+			if (sourceFiles.indexOf(file) != 0) {
+				sourceFiles.splice(sourceFiles.indexOf(file), 1);
+			}
+		}
+
         this.watchFilesForAutorun(sourceFiles);
         this.watchFilesForAutorun(testFiles);
 
@@ -174,11 +174,11 @@ export class UnityAdapter implements TestAdapter {
                 file: file,
                 children: []
             };
-            const testRegex = this.testNameRegex;
+            const testRegex = new RegExp(this.testCaseRegex, 'gm');
             const fileText = await fs.promises.readFile(file, 'utf8');
 			let match = testRegex.exec(fileText);
             while (match != null) {
-                let testName = match[1] + match[2];
+                let testName = match[1];
                 const testLabel = this.setTestLabel(testName);
                 let line = fileText.substr(0, match.index).split('\n').length - 1;
                 line = line + match[0].substr(0, match[0].search(/\S/g)).split('\n').length - 1;
@@ -238,7 +238,7 @@ export class UnityAdapter implements TestAdapter {
 			}
 		}
 	}
-	
+
 	findSuite(searchNode: TestSuiteInfo, id: string): TestSuiteInfo | undefined {
 		if (searchNode.type === 'suite') {
 			for (const child of searchNode.children) {
@@ -376,7 +376,7 @@ export class UnityAdapter implements TestAdapter {
 			return await this.runExe(exePath);
 		}
 	}
-	
+
 	async debug(tests: string[]): Promise<void> {
         try {
             //Get and validate debug configuration
@@ -393,10 +393,10 @@ export class UnityAdapter implements TestAdapter {
 					vscode.window.showErrorMessage('Cannot run make target to create folders needed for output. Please check foldersCommandArgs in settings.');
 				}
 			}
-	
+
             //Determine test suite to run
 			const suite = this.findSuite(this.testSuiteInfo, tests[0]);
-			
+
 			//Build test suite
 			if (suite !== undefined && suite.type === 'suite') {
 				let result = await this.buildTest(suite);
@@ -437,15 +437,9 @@ export class UnityAdapter implements TestAdapter {
 		}
 		this.disposables = [];
 	}
-	
+
     private getConfiguration(): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration('unityExplorer', this.workspace.uri);
-	}
-	
-	private getConfigurationBoolean(name: string): boolean {
-        const defaultResult = false;
-        const result = this.getConfiguration().get<boolean>(name, defaultResult);
-        return result;
 	}
 
     private getConfigurationString(name: string): string {
@@ -459,7 +453,7 @@ export class UnityAdapter implements TestAdapter {
         let workspacePath = this.workspace.uri.fsPath;
         return path.resolve(workspacePath, result);
 	}
-	
+
     private async getFileList(filePath: string, fileRegex: RegExp): Promise<string[]> {
 		let filesAndFolders: string[] = [];
 		let files: string[] = [];
@@ -485,7 +479,7 @@ export class UnityAdapter implements TestAdapter {
 
 		return files;
 	}
-	
+
     private watchFilesForAutorun(files: string[]): void {
         for (const file of files) {
             if (!this.watchedFileForAutorunList.includes(file)) {
@@ -512,11 +506,11 @@ export class UnityAdapter implements TestAdapter {
 
     private setTestLabel(testName: string): string | undefined {
         let testLabel = testName;
-        if (this.isPrettyTestLabelEnable) {
-            const labeltestLabelRegex = this.testLabelRegex;
+        if (this.prettyTestCaseRegex != '') {
+            const labeltestLabelRegex = new RegExp(this.prettyTestCaseRegex);
             let testLabelMatches = labeltestLabelRegex.exec(testName);
             if (testLabelMatches != null) {
-                testLabel = testLabelMatches[2];
+                testLabel = testLabelMatches[1];
             }
         }
         return testLabel;
@@ -524,11 +518,11 @@ export class UnityAdapter implements TestAdapter {
 
     private setFileLabel(fileName: string): string {
         let fileLabel = path.relative(this.workspace.uri.fsPath, fileName);
-        if (this.isPrettyTestFileLabelEnable) {
-            const labelFileRegex = this.fileLabelRegex;
+        if (this.prettyTestFileRegex != '') {
+            const labelFileRegex = new RegExp(this.prettyTestFileRegex);
             let labelMatches = labelFileRegex.exec(fileName);
             if (labelMatches != null) {
-                fileLabel = labelMatches[2];
+                fileLabel = labelMatches[1];
             }
         }
         return fileLabel;

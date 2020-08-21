@@ -39,6 +39,7 @@
     "vscode-test-adapter-util": "^0.7.0"
   },
   "devDependencies": {
+    "@types/node": "^14.6.0",
     "@types/vscode": "~1.23.0",
     "typescript": "^3.5.3",
     "vsce": "^1.65.0"
@@ -67,21 +68,19 @@
           "type": "string",
           "scope": "resource"
         },
-		"unityExplorer.makeCwdPath": {
-			"description": "Path to run make in",
-			"type": "string",
-			"scope": "resource"
-		},
-        "unityExplorer.prettyTestFileLabel": {
-          "markdownDescription": "Make test file asier to read in the test explorer, by removing its prefix, path and file type. E.g. inactive `test/LEDs/test_BlinkTask.c`, active `BlinkTask`",
-          "type": "boolean",
-          "default": false,
+        "unityExplorer.makeCwdPath": {
+          "description": "Path to run make in",
+          "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.prettyTestLabel": {
-          "markdownDescription": "Make test label easier to read in the test explorer, by removing its prefix. E.g. inactive `test_BlinkTaskShouldToggleLed`, active `BlinkTaskShouldToggleLed`",
-          "type": "boolean",
-          "default": false,
+        "unityExplorer.prettyTestCaseRegex": {
+			"markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
+		  "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.prettyTestFileRegex": {
+          "markdownDescription": "Regular expression to be used to simplify the test file label which by default is the path relative to the source folder. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test/LEDs/test_BlinkTask.c` to `BlinkTask`, regular expression which could be used is `test_(\\w+)\\.c`.",
+          "type": "string",
           "scope": "resource"
         },
         "unityExplorer.projectSourcePath": {
@@ -89,16 +88,33 @@
           "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.testBuildCommandArgs": {
-          "markdownDescription": "The command line arguments used to run the make target to build a test",
-          "type": "string",
+        "unityExplorer.sourceFileRegex": {
+          "description": "Regular expression to find source files. These are tracked for changes to mark test results as old if not re-run.",
+		  "type": "string",
+		  "default": "\\w+\\.[ch]",
           "scope": "resource"
         },
         "unityExplorer.testBuildPath": {
           "description": "Path to the test build output files",
           "type": "string",
           "scope": "resource"
-		},
+        },
+        "unityExplorer.testBuildCommandArgs": {
+          "markdownDescription": "The command line arguments to add when running make target to build a test",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testCaseRegex": {
+          "description": "Regular expression to find test cases in a file. The actual test case name must be put in a matching group",
+		  "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testFileRegex": {
+          "description": "Regular expression to find test files",
+          "type": "string",
+		  "default": "test_",
+          "scope": "resource"
+        },
         "unityExplorer.testSourcePath": {
           "description": "Path to the project test source files",
           "type": "string",
