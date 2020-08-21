@@ -17,7 +17,6 @@ import {
 } from 'vscode-test-adapter-api';
 
 export class UnityAdapter implements TestAdapter {
-
 	private disposables: { dispose(): void }[] = [];
 
 	private readonly testsEmitter = new vscode.EventEmitter<TestLoadStartedEvent | TestLoadFinishedEvent>();
@@ -47,14 +46,15 @@ export class UnityAdapter implements TestAdapter {
 	private makeProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
     private makeMutex: async_mutex.Mutex = new async_mutex.Mutex();
-    private suiteMutex: async_mutex.Mutex = new async_mutex.Mutex();
+	private suiteMutex: async_mutex.Mutex = new async_mutex.Mutex();
 
 	get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> { return this.testsEmitter.event; }
 	get testStates(): vscode.Event<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent> { return this.testStatesEmitter.event; }
 	get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
 	constructor(
-		public readonly workspace: vscode.WorkspaceFolder
+		public readonly workspace: vscode.WorkspaceFolder,
+		public readonly outputChannel: vscode.OutputChannel
 	) {
 		this.disposables.push(this.testsEmitter);
 		this.disposables.push(this.testStatesEmitter);
@@ -136,8 +136,13 @@ export class UnityAdapter implements TestAdapter {
 	async run(tests: string[]): Promise<void> {
 		this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
 
+		this.outputChannel.clear();
+		this.outputChannel.show();
+
 		if (this.foldersCommandArgs != '') {
 			let result = await this.createFolders();
+			this.outputChannel.append(result.stdout);
+			this.outputChannel.append(result.stderr);
 			if (result.error) {
 				vscode.window.showErrorMessage('Cannot run make target to create folders needed for output. Please check foldersCommandArgs in settings.');
 			}
@@ -213,7 +218,7 @@ export class UnityAdapter implements TestAdapter {
 							testStatesEmitter.fire(<TestEvent>{ type: 'test', test: child.id, state: 'failed' });
 						}
 						if (result.stderr.search('The process cannot access the file because it is being used by another process')) {
-							vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + ' .');
+							vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + '.');
 						}
 					} else {
 						for (const child of suite.children) {
@@ -227,7 +232,7 @@ export class UnityAdapter implements TestAdapter {
 						for (const child of suite.children) {
 							testStatesEmitter.fire(<TestEvent>{ type: 'test', test: child.id, state: 'failed' });
 						}
-						vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + ' .');
+						vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + '.');
 					} else {
 						const node = this.findNode(this.testSuiteInfo, suiteOrTestId);
 						if (node !== undefined && node.type === 'test') {
@@ -273,10 +278,14 @@ export class UnityAdapter implements TestAdapter {
 		testStatesEmitter.fire(<TestSuiteEvent>{ type: 'suite', suite: node.id, state: 'running' });
 
 		let result = await this.buildTest(node);
+		this.outputChannel.append(result.stdout);
+		this.outputChannel.append(result.stderr);
 		if (result.error) {
-			vscode.window.showErrorMessage('Cannot build test executable. Make error:\n' + result.error);
+			vscode.window.showErrorMessage('Cannot build test executable.');
 		} else {
 			result = await this.runTest(node);
+			this.outputChannel.append(result.stdout);
+			this.outputChannel.append(result.stderr);
 		}
 
 		testStatesEmitter.fire(<TestSuiteEvent>{ type: 'suite', suite: node.id, state: 'completed' });
@@ -389,6 +398,8 @@ export class UnityAdapter implements TestAdapter {
 			//Build needed output folders
 			if (this.foldersCommandArgs != '') {
 				let result = await this.createFolders();
+				this.outputChannel.append(result.stdout);
+				this.outputChannel.append(result.stderr);
 				if (result.error) {
 					vscode.window.showErrorMessage('Cannot run make target to create folders needed for output. Please check foldersCommandArgs in settings.');
 				}
@@ -400,8 +411,10 @@ export class UnityAdapter implements TestAdapter {
 			//Build test suite
 			if (suite !== undefined && suite.type === 'suite') {
 				let result = await this.buildTest(suite);
+				this.outputChannel.append(result.stdout);
+				this.outputChannel.append(result.stderr);
 				if (result.error) {
-					vscode.window.showErrorMessage('Cannot build test executable. Make error:\n' + result.error);
+					vscode.window.showErrorMessage('Cannot build test executable.');
 				return;
 				}
 			}
@@ -412,7 +425,7 @@ export class UnityAdapter implements TestAdapter {
 
 				// Launch debugger
 				if (!await vscode.debug.startDebugging(this.workspace, debugConfiguration))
-					vscode.window.showErrorMessage("Debugger could not be started.");
+					vscode.window.showErrorMessage('Debugger could not be started.');
 			}
         }
         finally {

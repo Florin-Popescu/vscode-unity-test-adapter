@@ -20,7 +20,7 @@ Run your [Unity](http://www.throwtheswitch.org/unity) tests using the
 ## Getting started
 
 * Install the extension and restart VS Code
-* Open the workspace or folder containing your Ceedling project
+* Open the workspace or folder containing your Unity framework project
 * [Configure](#options) the extension based on your project's needs
 * Open the Test view
 * Run your tests using the ![Run](img/run.png) icons in the Test Explorer or the CodeLenses in your test file

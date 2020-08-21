@@ -5,7 +5,7 @@
   "icon": "img/icon.png",
   "author": "Florin Popescu",
   "publisher": "fpopescu",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
@@ -35,6 +35,7 @@
     "async-mutex": "^0.1.4",
     "tree-kill": "^1.2.2",
     "tslib": "^1.9.3",
+    "vscode-read-manifest": "^0.5.1",
     "vscode-test-adapter-api": "^1.7.0",
     "vscode-test-adapter-util": "^0.7.0"
   },
@@ -74,8 +75,8 @@
           "scope": "resource"
         },
         "unityExplorer.prettyTestCaseRegex": {
-			"markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
-		  "type": "string",
+          "markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
+          "type": "string",
           "scope": "resource"
         },
         "unityExplorer.prettyTestFileRegex": {
@@ -90,8 +91,8 @@
         },
         "unityExplorer.sourceFileRegex": {
           "description": "Regular expression to find source files. These are tracked for changes to mark test results as old if not re-run.",
-		  "type": "string",
-		  "default": "\\w+\\.[ch]",
+          "type": "string",
+          "default": "\\w+\\.[ch]",
           "scope": "resource"
         },
         "unityExplorer.testBuildPath": {
@@ -106,13 +107,13 @@
         },
         "unityExplorer.testCaseRegex": {
           "description": "Regular expression to find test cases in a file. The actual test case name must be put in a matching group",
-		  "type": "string",
+          "type": "string",
           "scope": "resource"
         },
         "unityExplorer.testFileRegex": {
           "description": "Regular expression to find test files",
           "type": "string",
-		  "default": "test_",
+          "default": "test_",
           "scope": "resource"
         },
         "unityExplorer.testSourcePath": {
