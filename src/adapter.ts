@@ -42,6 +42,7 @@ export class UnityAdapter implements TestAdapter {
 	private testCaseRegex: string = '';
 	private testFileRegex: string = '';
 	private makeCwdPath: string = '.';
+	private systemExtension: string = '';
 	private readonly testResultString = ':(PASS|(FAIL: (.*)))';
 	private makeProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
@@ -59,6 +60,15 @@ export class UnityAdapter implements TestAdapter {
 		this.disposables.push(this.testsEmitter);
 		this.disposables.push(this.testStatesEmitter);
 		this.disposables.push(this.autorunEmitter);
+
+		if (process.platform === 'win32')
+		{
+			this.systemExtension = 'exe';
+		}
+		else
+		{
+			this.systemExtension = '';
+		}
 
 		this.foldersCommandArgs = this.getConfigurationString('foldersCommandArgs');
 		this.makeCwdPath = this.getConfigurationPath('makeCwdPath');
@@ -370,7 +380,7 @@ export class UnityAdapter implements TestAdapter {
 		let makeArgs = this.testBuildCommandArgs;
 
 		if (node.file != undefined) {
-			let exePath = path.join(this.testBuildPath, path.sep, path.basename(node.file).replace(path.extname(node.file), '.exe'));
+			let exePath = path.join(this.testBuildPath, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension));
 			exePath = exePath.replace(/\\/g,'/');
 
 			return await this.runMake(makeArgs + ' ' + exePath);
@@ -379,7 +389,7 @@ export class UnityAdapter implements TestAdapter {
 
 	async runTest(node: TestSuiteInfo): Promise<any> {
 		if (node.file != undefined) {
-			let exePath = path.join(this.testBuildPath, path.sep, path.basename(node.file).replace(path.extname(node.file), '.exe'));
+			let exePath = path.join(this.testBuildPath, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension));
 			exePath = '\"' + path.join(this.workspace.uri.fsPath, exePath) + '\"';
 
 			return await this.runExe(exePath);
@@ -421,7 +431,7 @@ export class UnityAdapter implements TestAdapter {
 
 			// Get test executable file name without extension
 			if (suite != undefined && suite.file != undefined) {
-				g_debugTestExecutable = path.join(this.testBuildPath, path.sep, path.basename(suite.file).replace(path.extname(suite.file), '.exe'));
+				g_debugTestExecutable = path.join(this.testBuildPath, path.sep, path.basename(suite.file).replace(path.extname(suite.file), this.systemExtension));
 
 				// Launch debugger
 				if (!await vscode.debug.startDebugging(this.workspace, debugConfiguration))
