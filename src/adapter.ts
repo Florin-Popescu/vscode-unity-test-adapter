@@ -63,7 +63,7 @@ export class UnityAdapter implements TestAdapter {
 
 		if (process.platform === 'win32')
 		{
-			this.systemExtension = 'exe';
+			this.systemExtension = '.exe';
 		}
 		else
 		{
