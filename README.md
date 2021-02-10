@@ -29,20 +29,33 @@ Run your [Unity](http://www.throwtheswitch.org/unity) tests using the
 
 ### Options
 
-Property                                | Description
-----------------------------------------|---------------------------------------------------------------
-`unityExplorer.debugConfiguration`      | The Debug configuration to run during debugging. See [Debugging](#debugging) for more info.
-`unityExplorer.foldersCommandArgs`      | The command line arguments used to run the make target to create folders needed for the output. If empty, no command will be run.
-`unityExplorer.makeCwdPath`             | The current working directory where `make` will be run in. By default the same path as the workspace folder is used.
-`unityExplorer.prettyTestCaseRegex`     | Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`. <br> Inactive: <br> ![prettyTestFileLabelInactive](img/prettyTestFileLabelInactive.png) <br> Active: <br> ![prettyTestFileLabelActive](img/prettyTestFileLabelActive.png)
-`unityExplorer.prettyTestFileRegex`     | Regular expression to be used to simplify the test file label which by default is the path relative to the source folder. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test/LEDs/test_BlinkTask.c` to `BlinkTask`, regular expression which could be used is `test_(\\w+)\\.c`. <br> Inactive: <br> ![prettyTestLabelInactive](img/prettyTestLabelInactive.png) <br> Active: <br> ![prettyTestLabelActive](img/prettyTestLabelActive.png)
-`unityExplorer.projectSourcePath`       | The path to the C source files. By default the same path as the workspace folder is used.
-`unityExplorer.sourceFileRegex`         | Regular expression to find source files. These are tracked for changes to mark test results as old if not re-run.
-`unityExplorer.testBuildPath`           | The path to the test build output files. By default the same path as the workspace folder is used.
-`unityExplorer.testBuildCommandArgs`    | Any additional arguments that need to be passed to `make` when building a test. Note that the test executable target is already passed to make, so there is no need to add it here.
-`unityExplorer.testCaseRegex`           | Regular expression to find test cases in a file. The actual test case name must be put in a matching group.
-`unityExplorer.testFileRegex`           | Regular expression to find test files.
-`unityExplorer.testSourcePath`          | The path to the unit test source files. By default the same path as the workspace folder is used.
+Example folder structure:
+`.` - the root of the workspace
+`./makefile` - the makefile which describes how to build the unit tests
+`folders` - a target in the makefile which creates needed folder structure (i.e. creates `./out`)
+`./src` - the folder where all tested sources are to be found
+`./src/foo.c` - a testable source file
+`bar()` - a function in `foo.c` which should be unit tested
+`./testsrc` - the folder where the unit test sources are to be found
+`./testsrc/fooTest.c `- a unit test for `foo.c`
+`test_bar1()` and `test_bar2()` - actual unit tests: functions in `fooTest.c` which test `bar()` in `foo.c`
+`./out/test` - the path to the built unit tests
+`./out/test/fooTest.exe` - the executable which would be built by the extension to run the tests in `fooTest.c`
+
+Property                                | Description                                                   | Example
+----------------------------------------|---------------------------------------------------------------|-------------------
+`unityExplorer.debugConfiguration`      | The Debug configuration to run during debugging. See [Debugging](#debugging) for more info. | `Unit Test`
+`unityExplorer.foldersCommandArgs`      | The command line arguments used to run the make target to create folders needed for the output. If empty, no command will be run. | `folders`
+`unityExplorer.makeCwdPath`             | The current working directory where `make` will be run in. By default the same path as the workspace folder is used. | `.`
+`unityExplorer.prettyTestCaseRegex`     | Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. <br> Inactive: <br> ![prettyTestFileLabelInactive](img/prettyTestFileLabelInactive.png) <br> Active: <br> ![prettyTestFileLabelActive](img/prettyTestFileLabelActive.png) | `test_(\w+)`
+`unityExplorer.prettyTestFileRegex`     | Regular expression to be used to simplify the test file label which by default is the path relative to the source folder. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. <br> Inactive: <br> ![prettyTestLabelInactive](img/prettyTestLabelInactive.png) <br> Active: <br> ![prettyTestLabelActive](img/prettyTestLabelActive.png) | `(\w+)Test.c`
+`unityExplorer.projectSourcePath`       | The path to the C source files. By default the same path as the workspace folder is used. | `src`
+`unityExplorer.sourceFileRegex`         | Regular expression to find source files. These are tracked for changes to mark test results as old if not re-run. | `\w+\.[ch]`
+`unityExplorer.testBuildPath`           | The path to the test build output files. By default the same path as the workspace folder is used. | `out/test`
+`unityExplorer.testBuildCommandArgs`    | Any additional arguments that need to be passed to `make` when building a test. Note that the test executable target is already passed to make, so there is no need to add it here. | `-DTEST`
+`unityExplorer.testCaseRegex`           | Regular expression to find test cases in a file. The actual test case name must be put in a matching group. | `void\s+(test_.*)\s*\(.*\)`
+`unityExplorer.testFileRegex`           | Regular expression to find test files.                         | `\w+Test.c`
+`unityExplorer.testSourcePath`          | The path to the unit test source files. By default the same path as the workspace folder is used. | `testsrc`
 
 ## Commands
 
