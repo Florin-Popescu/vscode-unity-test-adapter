@@ -5,7 +5,7 @@
   "icon": "img/icon.png",
   "author": "Florin Popescu",
   "publisher": "fpopescu",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
@@ -110,7 +110,7 @@
         "unityExplorer.testBuildApplication": {
           "markdownDescription": "Application used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this and the test's file name, with the system's executable extension (i.e. `make unitTest.exe`).",
           "type": "string",
-		  "default": "make",
+          "default": "make",
           "scope": "resource"
         },
         "unityExplorer.testBuildCwdPath": {
