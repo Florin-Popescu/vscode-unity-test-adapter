@@ -156,11 +156,10 @@ export class UnityAdapter implements TestAdapter {
 		this.outputChannel.show();
 
 		if (this.preBuildCommand != '') {
-			let result = await this.createFolders();
-			this.outputChannel.append(result.stdout);
-			this.outputChannel.append(result.stderr);
+			let result = await this.runExe(this.preBuildCommand);
 			if (result.error) {
-				vscode.window.showErrorMessage('Cannot run make target to create folders needed for output. Please check preBuildCommand in settings.');
+				vscode.window.showErrorMessage('Cannot run pre-build command.');
+			return;
 			}
 		}
 
@@ -365,6 +364,9 @@ export class UnityAdapter implements TestAdapter {
 			return new Promise<any>((resolve) => {
 				this.suiteProcess = child_process.exec(
 					exePath,
+					{
+						cwd: this.workspace.uri.fsPath
+					},
 					(error, stdout, stderr) => {
 						resolve({ error, stdout, stderr });
 					},
@@ -376,10 +378,6 @@ export class UnityAdapter implements TestAdapter {
 		finally {
 			release();
 		}
-	}
-
-	async createFolders(): Promise<any> {
-		return this.runBuildCommand(this.preBuildCommand);
 	}
 
 	async buildTest(node: TestSuiteInfo): Promise<any> {
@@ -395,8 +393,7 @@ export class UnityAdapter implements TestAdapter {
 
 	async runTest(node: TestSuiteInfo): Promise<any> {
 		if (node.file != undefined) {
-			let exePath = path.join(this.testExecutableFolder, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension));
-			exePath = '\"' + path.join(this.workspace.uri.fsPath, exePath) + '\"';
+			let exePath = '\"' + path.join(this.testExecutableFolder, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension)) + '\"';
 
 			return await this.runExe(exePath);
 		}
@@ -411,13 +408,12 @@ export class UnityAdapter implements TestAdapter {
 				return;
 			}
 
-			//Build needed output folders
+			//Run pre-build command
 			if (this.preBuildCommand != '') {
-				let result = await this.createFolders();
-				this.outputChannel.append(result.stdout);
-				this.outputChannel.append(result.stderr);
+				let result = await this.runExe(this.preBuildCommand);
 				if (result.error) {
-					vscode.window.showErrorMessage('Cannot run make target to create folders needed for output. Please check preBuildCommand in settings.');
+					vscode.window.showErrorMessage('Cannot run pre-build command.');
+				return;
 				}
 			}
 
