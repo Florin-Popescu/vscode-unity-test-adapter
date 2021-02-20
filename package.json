@@ -61,70 +61,70 @@
       "title": "Unity Test Explorer",
       "properties": {
         "unityExplorer.debugConfiguration": {
-          "description": "Debug configuration to run during test debug",
-          "type": "string",
-          "scope": "resource"
-        },
-        "unityExplorer.foldersCommandArgs": {
-          "markdownDescription": "The command line arguments used to run the make target to create folders needed for the output. If empty, no command will be run.",
+          "description": "Configuration to run when debugging tests.",
           "type": "string",
           "scope": "resource"
         },
         "unityExplorer.prettyTestCaseRegex": {
-          "markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
+          "markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a single matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
           "type": "string",
           "scope": "resource"
         },
         "unityExplorer.prettyTestFileRegex": {
-          "markdownDescription": "Regular expression to be used to simplify the test file label which by default is the path relative to the source folder. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test/LEDs/test_BlinkTask.c` to `BlinkTask`, regular expression which could be used is `test_(\\w+)\\.c`.",
+          "markdownDescription": "Regular expression to be used to simplify the test file label which by default is the path relative to the source folder. Put what you want to keep in a single matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test/LEDs/test_BlinkTask.c` to `BlinkTask`, regular expression which could be used is `test_(\\w+)\\.c`.",
           "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.projectSourcePath": {
-          "description": "The path to the C source files. By default the same path as the workspace folder is used.",
+        "unityExplorer.unitUnderTestFolder": {
+          "description": "The path to the unit under test source files. By default the workspace root is used.",
           "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.sourceFileRegex": {
-          "description": "Regular expression to find source files. These are tracked for changes to mark test results as old if not re-run.",
+        "unityExplorer.unitUnderTestFileRegex": {
+          "description": "Regular expression to find unit under test source files. These are tracked for changes to mark test results as old if not re-run.",
           "type": "string",
           "default": "\\w+\\.[ch]",
           "scope": "resource"
         },
-        "unityExplorer.testBuildPath": {
-          "description": "The path to the test build output files. By default the same path as the workspace folder is used.",
+        "unityExplorer.testSourceFolder": {
+          "description": "The path to the unit test source files. By default the workspace root is used.",
           "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.testBuildCommand": {
-          "markdownDescription": "Command used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this and the test's file name, with the system's executable extension (e.g. `make unitTest.exe`).",
-          "type": "string",
-		  "default": "make",
-          "scope": "resource"
-        },
-        "unityExplorer.testBuildCommandCwdPath": {
-          "description": "The current working directory where the build command will be run in. By default the same path as the workspace folder is used.",
-          "type": "string",
-          "scope": "resource"
-        },
-        "unityExplorer.testBuildCommandArgs": {
-          "markdownDescription": "Any additional arguments that need to be passed to the build command when building a test. Note that the test executable target is already passed, so there is no need to add it here.",
-          "type": "string",
-          "scope": "resource"
-        },
-        "unityExplorer.testCaseRegex": {
-          "description": "Regular expression to find test cases in a file. The actual test case name must be put in a matching group.",
-          "type": "string",
-          "scope": "resource"
-        },
-        "unityExplorer.testFileRegex": {
-          "description": "Regular expression to find test files",
+        "unityExplorer.testSourceFileRegex": {
+          "description": "Regular expression to find test source files.",
           "type": "string",
           "default": "test_",
           "scope": "resource"
         },
-        "unityExplorer.testSourcePath": {
-          "description": "The path to the unit test source files. By default the same path as the workspace folder is used.",
+        "unityExplorer.testCaseRegex": {
+          "description": "Regular expression to find test cases in a file. The actual test case name must be put in a single matching group.",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.preBuildCommand": {
+          "markdownDescription": "Any command which must be run before building the unit tests. If empty, no command will be run.",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildApplication": {
+          "markdownDescription": "Application used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this and the test's file name, with the system's executable extension (i.e. `make unitTest.exe`).",
+          "type": "string",
+		  "default": "make",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildCwdPath": {
+          "description": "The current working directory where the build command will be run in. By default the workspace root is used.",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildArgs": {
+          "markdownDescription": "Any additional arguments that need to be passed to the build command when building a test. Note that the test executable target is already passed, so there is no need to add it here.",
+          "type": "string",
+          "scope": "resource"
+        },
+        "unityExplorer.testExecutableFolder": {
+          "description": "The path to the built output files. By default the workspace root is used.",
           "type": "string",
           "scope": "resource"
         }
