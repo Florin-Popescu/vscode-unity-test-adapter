@@ -34,6 +34,7 @@ export class UnityAdapter implements TestAdapter {
 	private projectSourcePath: string = '.';
 	private testSourcePath: string = '.';
 	private testBuildPath: string = '.';
+	private testBuildCommand: string = '';
 	private testBuildCommandArgs: string = '';
 	private foldersCommandArgs: string = '';
 	private prettyTestCaseRegex: string = '.*';
@@ -41,12 +42,12 @@ export class UnityAdapter implements TestAdapter {
 	private sourceFileRegex: string = '.h.c';
 	private testCaseRegex: string = '';
 	private testFileRegex: string = '';
-	private makeCwdPath: string = '.';
+	private testBuildCommandCwdPath: string = '.';
 	private systemExtension: string = '';
 	private readonly testResultString = ':(PASS|(FAIL: (.*)))';
-	private makeProcess: child_process.ChildProcess | undefined;
+	private buildProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
-    private makeMutex: async_mutex.Mutex = new async_mutex.Mutex();
+    private buildMutex: async_mutex.Mutex = new async_mutex.Mutex();
 	private suiteMutex: async_mutex.Mutex = new async_mutex.Mutex();
 
 	get tests(): vscode.Event<TestLoadStartedEvent | TestLoadFinishedEvent> { return this.testsEmitter.event; }
@@ -71,12 +72,13 @@ export class UnityAdapter implements TestAdapter {
 		}
 
 		this.foldersCommandArgs = this.getConfigurationString('foldersCommandArgs');
-		this.makeCwdPath = this.getConfigurationPath('makeCwdPath');
+		this.testBuildCommandCwdPath = this.getConfigurationPath('testBuildCommandCwdPath');
 		this.prettyTestCaseRegex = this.getConfigurationString('prettyTestCaseRegex');
 		this.prettyTestFileRegex = this.getConfigurationString('prettyTestFileRegex');
 		this.projectSourcePath = this.getConfigurationPath('projectSourcePath');
 		this.sourceFileRegex = this.getConfigurationString('sourceFileRegex');
 		this.testBuildPath = this.getConfigurationString('testBuildPath');
+		this.testBuildCommand = this.getConfigurationString('testBuildCommand');
 		this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
 		this.testCaseRegex = this.getConfigurationString('testCaseRegex');
 		this.testFileRegex = this.getConfigurationString('testFileRegex');
@@ -87,8 +89,8 @@ export class UnityAdapter implements TestAdapter {
             if (event.affectsConfiguration('unityExplorer.foldersCommandArgs')) {
 				this.foldersCommandArgs = this.getConfigurationString('foldersCommandArgs');
 			}
-            if (event.affectsConfiguration('unityExplorer.makeCwdPath')) {
-				this.makeCwdPath = this.getConfigurationPath('makeCwdPath');
+            if (event.affectsConfiguration('unityExplorer.testBuildCommandCwdPath')) {
+				this.testBuildCommandCwdPath = this.getConfigurationPath('testBuildCommandCwdPath');
 			}
             if (event.affectsConfiguration('unityExplorer.prettyTestCaseRegex')) {
 				this.prettyTestCaseRegex = this.getConfigurationString('prettyTestCaseRegex');
@@ -107,6 +109,9 @@ export class UnityAdapter implements TestAdapter {
 			}
             if (event.affectsConfiguration('unityExplorer.testBuildCommandArgs')) {
 				this.testBuildCommandArgs = this.getConfigurationString('testBuildCommandArgs');
+			}
+            if (event.affectsConfiguration('unityExplorer.testBuildCommand')) {
+				this.testBuildCommand = this.getConfigurationString('testBuildCommand');
 			}
             if (event.affectsConfiguration('unityExplorer.testCaseRegex')) {
 				this.testCaseRegex = this.getConfigurationString('testCaseRegex');
@@ -334,14 +339,14 @@ export class UnityAdapter implements TestAdapter {
 		}
 	}
 
-	private async runMake(makeArgs: string): Promise<any> {
-		const release = await this.makeMutex.acquire();
+	private async runBuildCommand(buildArgs: string): Promise<any> {
+		const release = await this.buildMutex.acquire();
         try {
 			return new Promise<any>((resolve) => {
-				this.makeProcess = child_process.exec(
-					'make ' + makeArgs,
+				this.buildProcess = child_process.exec(
+					this.testBuildCommand + ' ' + buildArgs,
 					{
-						cwd: this.makeCwdPath
+						cwd: this.testBuildCommandCwdPath
 					},
 					(error, stdout, stderr) => {
 						resolve({ error, stdout, stderr });
@@ -373,17 +378,17 @@ export class UnityAdapter implements TestAdapter {
 	}
 
 	async createFolders(): Promise<any> {
-		return this.runMake(this.foldersCommandArgs);
+		return this.runBuildCommand(this.foldersCommandArgs);
 	}
 
 	async buildTest(node: TestSuiteInfo): Promise<any> {
-		let makeArgs = this.testBuildCommandArgs;
+		let buildArgs = this.testBuildCommandArgs;
 
 		if (node.file != undefined) {
 			let exePath = path.join(this.testBuildPath, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension));
 			exePath = exePath.replace(/\\/g,'/');
 
-			return await this.runMake(makeArgs + ' ' + exePath);
+			return await this.runBuildCommand(buildArgs + ' ' + exePath);
 		}
 	}
 
@@ -445,8 +450,8 @@ export class UnityAdapter implements TestAdapter {
 	}
 
 	cancel(): void {
-        if (this.makeProcess !== undefined) {
-            tree_kill(this.makeProcess.pid);
+        if (this.buildProcess !== undefined) {
+            tree_kill(this.buildProcess.pid);
 		}
 		if (this.suiteProcess !== undefined) {
             tree_kill(this.suiteProcess.pid);

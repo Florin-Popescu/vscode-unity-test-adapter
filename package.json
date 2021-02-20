@@ -69,11 +69,6 @@
           "type": "string",
           "scope": "resource"
         },
-        "unityExplorer.makeCwdPath": {
-          "description": "The current working directory where `make` will be run in. By default the same path as the workspace folder is used.",
-          "type": "string",
-          "scope": "resource"
-        },
         "unityExplorer.prettyTestCaseRegex": {
           "markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in a matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
           "type": "string",
@@ -100,8 +95,19 @@
           "type": "string",
           "scope": "resource"
         },
+        "unityExplorer.testBuildCommand": {
+          "markdownDescription": "Command used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this and the test's file name, with the system's executable extension (e.g. `make unitTest.exe`).",
+          "type": "string",
+		  "default": "make",
+          "scope": "resource"
+        },
+        "unityExplorer.testBuildCommandCwdPath": {
+          "description": "The current working directory where the build command will be run in. By default the same path as the workspace folder is used.",
+          "type": "string",
+          "scope": "resource"
+        },
         "unityExplorer.testBuildCommandArgs": {
-          "markdownDescription": "Any additional arguments that need to be passed to `make` when building a test. Note that the test executable target is already passed to make, so there is no need to add it here.",
+          "markdownDescription": "Any additional arguments that need to be passed to the build command when building a test. Note that the test executable target is already passed, so there is no need to add it here.",
           "type": "string",
           "scope": "resource"
         },
