@@ -5,7 +5,7 @@
   "icon": "img/icon.png",
   "author": "Florin Popescu",
   "publisher": "fpopescu",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
