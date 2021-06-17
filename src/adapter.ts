@@ -42,9 +42,9 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildApplication: string = '';
 	private testBuildCwdPath: string = '.';
 	private testBuildArgs: string = '';
-	private testExecutableFolder: string = '.';
+	private testBuildTargetRegex: string = '$1';
+	private testExecutableRegex: string = '$1';
 
-	private systemExtension: string = '';
 	private readonly testResultString = ':(PASS|(FAIL: (.*)))';
 	private buildProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
@@ -63,15 +63,6 @@ export class UnityAdapter implements TestAdapter {
 		this.disposables.push(this.testStatesEmitter);
 		this.disposables.push(this.autorunEmitter);
 
-		if (process.platform === 'win32')
-		{
-			this.systemExtension = '.exe';
-		}
-		else
-		{
-			this.systemExtension = '';
-		}
-
 		this.prettyTestCaseRegex = this.getConfigurationString('prettyTestCaseRegex');
 		this.prettyTestFileRegex = this.getConfigurationString('prettyTestFileRegex');
 		this.unitUnderTestFolder = this.getConfigurationPath('unitUnderTestFolder');
@@ -83,7 +74,8 @@ export class UnityAdapter implements TestAdapter {
 		this.testBuildApplication = this.getConfigurationString('testBuildApplication');
 		this.testBuildCwdPath = this.getConfigurationPath('testBuildCwdPath');
 		this.testBuildArgs = this.getConfigurationString('testBuildArgs');
-		this.testExecutableFolder = this.getConfigurationString('testExecutableFolder');
+		this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
+		this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
 
 		// callback when a config property is modified
 		vscode.workspace.onDidChangeConfiguration(event => {
@@ -120,8 +112,11 @@ export class UnityAdapter implements TestAdapter {
 			if (event.affectsConfiguration('unityExplorer.testBuildArgs')) {
 				this.testBuildArgs = this.getConfigurationString('testBuildArgs');
 			}
-			if (event.affectsConfiguration('unityExplorer.testExecutableFolder')) {
-				this.testExecutableFolder = this.getConfigurationString('testExecutableFolder');
+			if (event.affectsConfiguration('unityExplorer.testBuildTargetRegex')) {
+				this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
+			}
+			if (event.affectsConfiguration('unityExplorer.testExecutableRegex')) {
+				this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
 			}
 			this.load();
 		})
@@ -384,16 +379,16 @@ export class UnityAdapter implements TestAdapter {
 		let buildArgs = this.testBuildArgs;
 
 		if (node.file != undefined) {
-			let exePath = path.join(this.testExecutableFolder, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension));
-			exePath = exePath.replace(/\\/g,'/');
+			let target = path.parse(node.file).name.replace(new RegExp('(.*)'), this.testBuildTargetRegex);
+			target = target.replace(/\\/g,'/');
 
-			return await this.runBuildCommand(buildArgs + ' ' + exePath);
+			return await this.runBuildCommand(buildArgs + ' ' + target);
 		}
 	}
 
 	async runTest(node: TestSuiteInfo): Promise<any> {
 		if (node.file != undefined) {
-			let exePath = '\"' + path.join(this.testExecutableFolder, path.sep, path.basename(node.file).replace(path.extname(node.file), this.systemExtension)) + '\"';
+			let exePath = '\"' + path.parse(node.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
 
 			return await this.runExe(exePath);
 		}
@@ -433,7 +428,7 @@ export class UnityAdapter implements TestAdapter {
 
 			// Get test executable file name without extension
 			if (suite != undefined && suite.file != undefined) {
-				g_debugTestExecutable = path.join(this.testExecutableFolder, path.sep, path.basename(suite.file).replace(path.extname(suite.file), this.systemExtension));
+				g_debugTestExecutable = path.parse(suite.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
 
 				// Launch debugger
 				if (!await vscode.debug.startDebugging(this.workspace, debugConfiguration))
@@ -492,7 +487,7 @@ export class UnityAdapter implements TestAdapter {
 			for (const item of filesAndFolders) {
 				let fullPath = path.resolve(filePath, item);
 				if ((await fs.promises.lstat(fullPath)).isFile()) {
-					if (fileRegex.test(item)) {
+					if (fileRegex.test(fullPath)) {
 						files.push(fullPath);
 					}
 				}
