@@ -45,7 +45,7 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildTargetRegex: string = '$1';
 	private testExecutableRegex: string = '$1';
 
-	private readonly testResultString = ':(PASS|(FAIL: (.*)))';
+	private readonly testResultString = ':(PASS|(FAIL:\ ?(.*)))';
 	private buildProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
 	private buildMutex: async_mutex.Mutex = new async_mutex.Mutex();
