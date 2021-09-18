@@ -39,7 +39,7 @@ export class UnityAdapter implements TestAdapter {
 	private testSourceFileRegex: string = '';
 	private testCaseRegex: string = '';
 	private preBuildCommand: string = '';
-	private testBuildApplication: string = '';
+	private testBuildApplication: string = 'make';
 	private testBuildCwdPath: string = '.';
 	private testBuildArgs: string = '';
 	private testBuildTargetRegex: string = '$1';
