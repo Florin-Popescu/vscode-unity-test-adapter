@@ -1,11 +1,11 @@
 {
   "name": "vscode-unity-test-adapter",
-  "displayName": "Unity Framework for C Test Explorer",
-  "description": "Run your Unity tests in the Sidebar of Visual Studio Code",
+  "displayName": "C Unity Test Explorer",
+  "description": "Run your C unit tests using the Unity framework in the Sidebar of Visual Studio Code",
   "icon": "img/icon.png",
   "author": "Florin Popescu",
   "publisher": "fpopescu",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "MIT",
   "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
@@ -44,7 +44,7 @@
   "devDependencies": {
     "@types/node": "^14.17.17",
     "@types/vscode": "~1.23.0",
-    "typescript": "^3.9.9",
+    "typescript": "^3.9.10",
     "vsce": "^1.99.0"
   },
   "engines": {
