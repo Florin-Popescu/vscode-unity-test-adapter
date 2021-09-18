@@ -45,6 +45,7 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildTargetRegex: string = '$1';
 	private testExecutableRegex: string = '$1';
 	private testExecutableArgs: string = '';
+	private testExecutableArgSingleCaseRegex: string = '';
 
 	private readonly testFailLineNrRegex = ':([0-9]+):';
 	private readonly testResultString = '(PASS|FAIL:\ ?(.*))';
@@ -79,6 +80,7 @@ export class UnityAdapter implements TestAdapter {
 		this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
 		this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
 		this.testExecutableArgs = this.getConfigurationString('testExecutableArgs');
+		this.testExecutableArgSingleCaseRegex = this.getConfigurationString('testExecutableArgSingleCaseRegex');
 
 		// callback when a config property is modified
 		vscode.workspace.onDidChangeConfiguration(event => {
@@ -123,6 +125,9 @@ export class UnityAdapter implements TestAdapter {
 			}
 			if (event.affectsConfiguration('unityExplorer.testExecutableArgs')) {
 				this.testExecutableArgs = this.getConfigurationString('testExecutableArgs');
+			}
+			if (event.affectsConfiguration('unityExplorer.testExecutableArgSingleCaseRegex')) {
+				this.testExecutableArgSingleCaseRegex = this.getConfigurationString('testExecutableArgSingleCaseRegex');
 			}
 			this.load();
 		})

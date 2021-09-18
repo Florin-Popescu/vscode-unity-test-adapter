@@ -45,6 +45,7 @@ Example folder structure:
 `./out/test` - the path to the built unit tests
 `./out/test/fooTest.exe` - the executable which would be built by the extension to run the tests in `fooTest.c`
 `-v` - the argument which must be passed to `fooTest.exe` to also show passed tests
+`-n test_bar1` - an optional argument which can be passed to `fooTest.exe` to speed up its execution by only running a single test case `test_bar1()`
 
 Property                                | Description                                                   | Example
 ----------------------------------------|---------------------------------------------------------------|-------------------
@@ -60,9 +61,10 @@ Property                                | Description                           
 `unityExplorer.testBuildApplication`    | Application used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this with the `testBuildTargetRegex` as build target. | `make`
 `unityExplorer.testBuildCwdPath`        | The current working directory where the build command will be run in. By default the workspace root is used. | `.`
 `unityExplorer.testBuildArgs`           | Any additional arguments that need to be passed to the build command when building a test. Note that the target to be built is passed separately, so there is no need to add it here. | `-DTEST`
-`unityExplorer.testBuildTargetRegex`          | Regular expression which should be applied to the test source file name (without extension) to produce a target for the build system. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `make unitTest` will be called). | `out/test/$1.exe`
+`unityExplorer.testBuildTargetRegex`    | Regular expression which should be applied to the test source file name (without extension) to produce a target for the build system. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `make unitTest` will be called). | `out/test/$1.exe`
 `unityExplorer.testExecutableRegex`     | Regular expression which should be applied to the test source file name (without extension) to produce the executable file name to run the test. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `unitTest` will be ran). | `out/test/$1.exe`
 `unityExplorer.testExecutableArgs`      | Any additional arguments that need to be passed to the test executable when running it. | `-v`
+`unityExplorer.testExecutableArgSingleCaseRegex` | Regular expression which should be applied to a test case (not the pretty-fied label) and passed as argument to the test executable to only run that test case. This speeds up execution when a single test case of a large file is needed to be run. A `$1` will be replaced with the test case name. By default all the file's test cases are run even if a single test case is run from the interface. | `-n $1`
 
 ## Commands
 

@@ -138,6 +138,11 @@
           "markdownDescription": "Any additional arguments that need to be passed to the test executable when running it.",
           "type": "string",
           "scope": "resource"
+        },
+        "unityExplorer.testExecutableArgSingleCaseRegex": {
+          "markdownDescription": "Regular expression which should be applied to a test case (not the pretty-fied label) and passed as argument to the test executable to only run that test case. This speeds up execution when a single test case of a large file is needed to be run. A `$1` will be replaced with the test case name. By default all the file's test cases are run even if a single test case is run from the interface.",
+          "type": "string",
+          "scope": "resource"
         }
       }
     }
