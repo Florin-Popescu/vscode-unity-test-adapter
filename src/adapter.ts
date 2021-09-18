@@ -44,8 +44,10 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildArgs: string = '';
 	private testBuildTargetRegex: string = '$1';
 	private testExecutableRegex: string = '$1';
+	private testExecutableArgs: string = '';
 
-	private readonly testResultString = ':(PASS|(FAIL:\ ?(.*)))';
+	private readonly testFailLineNrRegex = ':([0-9]+):';
+	private readonly testResultString = '(PASS|FAIL:\ ?(.*))';
 	private buildProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
 	private buildMutex: async_mutex.Mutex = new async_mutex.Mutex();
@@ -76,6 +78,7 @@ export class UnityAdapter implements TestAdapter {
 		this.testBuildArgs = this.getConfigurationString('testBuildArgs');
 		this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
 		this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
+		this.testExecutableArgs = this.getConfigurationString('testExecutableArgs');
 
 		// callback when a config property is modified
 		vscode.workspace.onDidChangeConfiguration(event => {
@@ -118,6 +121,9 @@ export class UnityAdapter implements TestAdapter {
 			if (event.affectsConfiguration('unityExplorer.testExecutableRegex')) {
 				this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
 			}
+			if (event.affectsConfiguration('unityExplorer.testExecutableArgs')) {
+				this.testExecutableArgs = this.getConfigurationString('testExecutableArgs');
+			}
 			this.load();
 		})
 	}
@@ -151,7 +157,7 @@ export class UnityAdapter implements TestAdapter {
 		this.outputChannel.show();
 
 		if (this.preBuildCommand != '') {
-			let result = await this.runExe(this.preBuildCommand);
+			let result = await this.runCommand(this.preBuildCommand);
 			if (result.error) {
 				vscode.window.showErrorMessage('Cannot run pre-build command.');
 			return;
@@ -310,26 +316,49 @@ export class UnityAdapter implements TestAdapter {
 	): Promise<void> {
 		testStatesEmitter.fire(<TestEvent>{ type: 'test', test: node.id, state: 'running' });
 
-		let testResultRegex = new RegExp(':([0-9]+):.*' + node.label + this.testResultString);
-		let match = testResultRegex.exec(suiteResult);
+		let testCaseRegex = new RegExp(node.label + '.*' + this.testResultString);
+		let match = testCaseRegex.exec(suiteResult);
 
 		if (match != null) {
-			if (match[2] === 'PASS') {
+			if (match[1] === 'PASS') {
 				testStatesEmitter.fire(<TestEvent>{
 					type: 'test',
 					test: node.id,
 					state: 'passed'
 				});
 			} else {
-				testStatesEmitter.fire(<TestEvent>{
-					type: 'test',
-					test: node.id,
-					state: 'failed',
-					decorations: [{
-						line: parseInt(match[1]) - 1,
-						message: match[4]
-					}]
-				});
+				let testFailRegex = new RegExp(this.testFailLineNrRegex + '.*' + node.label + '.*' + this.testResultString);
+				match = testFailRegex.exec(suiteResult);
+
+				if (match != null) {
+					//Regular Unity format
+					testStatesEmitter.fire(<TestEvent>{
+						type: 'test',
+						test: node.id,
+						state: 'failed',
+						decorations: [{
+							line: parseInt(match[1]) - 1,
+							message: match[3]
+						}]
+					});
+				}
+				else {
+					testFailRegex = new RegExp(node.label + '.*' + this.testFailLineNrRegex + '.*' + this.testResultString);
+					match = testFailRegex.exec(suiteResult);
+
+					if (match != null) {
+						//Unity Fixture format
+						testStatesEmitter.fire(<TestEvent>{
+							type: 'test',
+							test: node.id,
+							state: 'failed',
+							decorations: [{
+								line: parseInt(match[1]) - 1,
+								message: match[3]
+							}]
+						});
+					}
+				}
 			}
 		}
 	}
@@ -353,14 +382,14 @@ export class UnityAdapter implements TestAdapter {
 		}
 	}
 
-	private async runExe(exePath: string): Promise<any> {
+	private async runCommand(command: string): Promise<any> {
 		const release = await this.suiteMutex.acquire();
 		try {
 			return new Promise<any>((resolve) => {
 				this.suiteProcess = child_process.exec(
-					exePath,
+					command,
 					{
-						cwd: this.workspace.uri.fsPath
+						cwd: this.workspace.uri.fsPath,
 					},
 					(error, stdout, stderr) => {
 						resolve({ error, stdout, stderr });
@@ -390,7 +419,7 @@ export class UnityAdapter implements TestAdapter {
 		if (node.file != undefined) {
 			let exePath = '\"' + path.parse(node.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
 
-			return await this.runExe(exePath);
+			return await this.runCommand(exePath + ' ' + this.testExecutableArgs);
 		}
 	}
 
@@ -405,7 +434,7 @@ export class UnityAdapter implements TestAdapter {
 
 			//Run pre-build command
 			if (this.preBuildCommand != '') {
-				let result = await this.runExe(this.preBuildCommand);
+				let result = await this.runCommand(this.preBuildCommand);
 				if (result.error) {
 					vscode.window.showErrorMessage('Cannot run pre-build command.');
 				return;
