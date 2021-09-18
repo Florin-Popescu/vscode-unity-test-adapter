@@ -21,7 +21,10 @@ Run your [Unity](http://www.throwtheswitch.org/unity) tests using the
 
 * Install the extension and restart VS Code
 * Open the workspace or folder containing your Unity framework project
-* [Configure](#options) the extension based on your project's needs
+* [Configure](#options) the extension based on your project's needs. Minimum required configurations:
+    * `unityExplorer.testSourceFileRegex` - regex used to find test source files. It must distinguish between the unit test sources and the production sources.
+	* `unityExplorer.testCaseRegex` - regex used to find test cases in a test source file. The name of the test must be put in a matching group (inside parenthesis).
+	* `unityExplorer.testExecutableArgs` - if using Unity Fixtures (instead of the regular Unity test macros) this must be set to `-v`. This is because the extension expects even passed tests to have some output to distinguish from tests which weren't run at all, and this is only provided with `-v`.
 * Open the Test view
 * Run your tests using the ![Run](img/run.png) icons in the Test Explorer or the CodeLenses in your test file
 
@@ -52,7 +55,7 @@ Property                                | Description                           
 `unityExplorer.unitUnderTestFileRegex`  | Regular expression against which unit under test source files should match. These are tracked for changes to mark test results as old if not re-run. | `\w+\.[ch]`
 `unityExplorer.testSourceFolder`        | The path the extension should use to look for the unit test source files. By default the workspace root is used. | `testsrc`
 `unityExplorer.testSourceFileRegex`     | Regular expression against which test source files should match.                         | `\w+Test.c`
-`unityExplorer.testCaseRegex`           | Regular expression against which test cases in a file should match. The actual test case name must be put in the first matching group. | `void\s+(test_.*)\s*\(.*\)`
+`unityExplorer.testCaseRegex`           | Regular expression against which test cases in a file should match. The actual test case name must be put in the first matching group, while the rest of the regular expression can be used to match only the lines containing test names. | `void\s+(test_.*)\s*\(.*\)`
 `unityExplorer.preBuildCommand`         | Any command which must be run before building the unit tests. If empty, no command will be run. | `make clean`
 `unityExplorer.testBuildApplication`    | Application used to build the tests (e.g. `make`, `cmake`, `gcc`). A test will be built by running this with the `testBuildTargetRegex` as build target. | `make`
 `unityExplorer.testBuildCwdPath`        | The current working directory where the build command will be run in. By default the workspace root is used. | `.`
