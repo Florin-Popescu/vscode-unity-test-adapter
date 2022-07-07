@@ -43,6 +43,7 @@ export class UnityAdapter implements TestAdapter {
 	private testBuildCwdPath: string = '.';
 	private testBuildArgs: string = '';
 	private testBuildTargetRegex: string = '$1';
+	private testExecutableLauncher: string = '';
 	private testExecutableRegex: string = '$1';
 	private testExecutableArgs: string = '';
 	private testExecutableArgSingleCaseRegex: string = '';
@@ -78,6 +79,7 @@ export class UnityAdapter implements TestAdapter {
 		this.testBuildCwdPath = this.getConfigurationPath('testBuildCwdPath');
 		this.testBuildArgs = this.getConfigurationString('testBuildArgs');
 		this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
+		this.testExecutableLauncher = this.getConfigurationString('testExecutableLauncher');
 		this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
 		this.testExecutableArgs = this.getConfigurationString('testExecutableArgs');
 		this.testExecutableArgSingleCaseRegex = this.getConfigurationString('testExecutableArgSingleCaseRegex');
@@ -119,6 +121,9 @@ export class UnityAdapter implements TestAdapter {
 			}
 			if (event.affectsConfiguration('unityExplorer.testBuildTargetRegex')) {
 				this.testBuildTargetRegex = this.getConfigurationString('testBuildTargetRegex');
+			}
+			if (event.affectsConfiguration('unityExplorer.testExecutableLauncher')) {
+				this.testExecutableLauncher = this.getConfigurationString('testExecutableLauncher');
 			}
 			if (event.affectsConfiguration('unityExplorer.testExecutableRegex')) {
 				this.testExecutableRegex = this.getConfigurationString('testExecutableRegex');
@@ -422,7 +427,8 @@ export class UnityAdapter implements TestAdapter {
 
 	async runTest(node: TestSuiteInfo): Promise<any> {
 		if (node.file != undefined) {
-			let exePath = '\"' + path.parse(node.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
+			let launcher = (this.testExecutableLauncher.length > 0)? (this.testExecutableLauncher + ' ') : '';
+			let exePath = launcher + '\"' + path.parse(node.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
 
 			return await this.runCommand(exePath + ' ' + this.testExecutableArgs);
 		}

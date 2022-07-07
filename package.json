@@ -129,6 +129,11 @@
           "type": "string",
           "scope": "resource"
         },
+        "unityExplorer.testExecutableLauncher": {
+          "markdownDescription": "Launcher command used to start the test executable file",
+          "type": "string",
+          "scope": "resource"
+        },
         "unityExplorer.testExecutableRegex": {
           "markdownDescription": "Regular expression which should be applied to the test source file name (without extension) to produce the executable file name to run the test. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `unitTest` will be ran).",
           "type": "string",
