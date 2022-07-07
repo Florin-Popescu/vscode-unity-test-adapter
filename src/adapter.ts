@@ -234,36 +234,36 @@ export class UnityAdapter implements TestAdapter {
 	): Promise<void> {
 		for (const suiteOrTestId of tests) {
 			//Find containing suite
-			const suite = this.findSuite(this.testSuiteInfo, suiteOrTestId);
-			if (suite !== undefined && suite.type === 'suite') {
-				let result = await this.runSuiteExe(suite, testStatesEmitter);
+			const node = this.findNode(this.testSuiteInfo, suiteOrTestId);
+			if (node !== undefined) {
+				if (node.type === 'suite') {
+					let result = await this.runSuiteExe(node, testStatesEmitter);
 
-				if (suiteOrTestId == suite.id) {
 					if (result.error && !result.stdout) {
-						for (const child of suite.children) {
-							testStatesEmitter.fire(<TestEvent>{ type: 'test', test: child.id, state: 'failed' });
+						for (const child of node.children) {
+							if (child.type === 'test') {
+								testStatesEmitter.fire(<TestEvent>{ type: 'test', test: child.id, state: 'failed' });
+							}
 						}
 						if (result.stderr.search('The process cannot access the file because it is being used by another process')) {
-							vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + '.');
+							vscode.window.showErrorMessage('Cannot run test executable for ' + node.id + '.');
 						}
 					} else {
-						for (const child of suite.children) {
+						for (const child of node.children) {
 							if (child.type === 'test') {
 								await this.checkTestResult(child, result.stdout, testStatesEmitter);
 							}
 						}
 					}
-				} else {
+
+				} else if (node.type === 'test') {
+					let result = await this.runTestExe(node, testStatesEmitter);
+
 					if (result.error && !result.stdout) {
-						for (const child of suite.children) {
-							testStatesEmitter.fire(<TestEvent>{ type: 'test', test: child.id, state: 'failed' });
-						}
-						vscode.window.showErrorMessage('Cannot run test executable for ' + suiteOrTestId + '.');
+						testStatesEmitter.fire(<TestEvent>{ type: 'test', test: node.id, state: 'failed' });
+						vscode.window.showErrorMessage('Cannot run test executable for ' + node.id + '.');
 					} else {
-						const node = this.findNode(this.testSuiteInfo, suiteOrTestId);
-						if (node !== undefined && node.type === 'test') {
-							await this.checkTestResult(node, result.stdout, testStatesEmitter);
-						}
+						await this.checkTestResult(node, result.stdout, testStatesEmitter);
 					}
 				}
 			}
@@ -317,6 +317,33 @@ export class UnityAdapter implements TestAdapter {
 		testStatesEmitter.fire(<TestSuiteEvent>{ type: 'suite', suite: node.id, state: 'completed' });
 
 		return result;
+	}
+
+	async runTestExe(
+		test: TestInfo,
+		testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
+	): Promise<any> {
+
+		const suite = this.findSuite(this.testSuiteInfo, test.id);
+		if (suite !== undefined) {
+
+			testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: [test.id]});
+
+			let result = await this.buildTest(suite);
+			this.outputChannel.append(result.stdout);
+			this.outputChannel.append(result.stderr);
+			if (result.error) {
+				vscode.window.showErrorMessage('Cannot build test executable.');
+			} else {
+				result = await this.runSingleTest(test);
+				this.outputChannel.append(result.stdout);
+				this.outputChannel.append(result.stderr);
+			}
+
+			this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+
+			return result;
+		}
 	}
 
 	async checkTestResult(
@@ -434,6 +461,20 @@ export class UnityAdapter implements TestAdapter {
 		}
 	}
 
+	async runSingleTest(test: TestInfo): Promise<any> {
+		//Determine test suite to run
+		const suite = this.findSuite(this.testSuiteInfo, test.id);
+
+		let testCaseArgs = test.label.replace(new RegExp('(.*)'), this.testExecutableArgSingleCaseRegex);
+
+		if (suite !== undefined && suite.file != undefined) {
+			let launcher = (this.testExecutableLauncher.length > 0)? (this.testExecutableLauncher + ' ') : '';
+			let exePath = launcher + '\"' + path.parse(suite.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
+
+			return await this.runCommand(exePath + ' ' + this.testExecutableArgs + ' ' + testCaseArgs);
+		}
+	}
+
 	async debug(tests: string[]): Promise<void> {
 		try {
 			//Get and validate debug configuration
@@ -468,6 +509,14 @@ export class UnityAdapter implements TestAdapter {
 
 			// Get test executable file name without extension
 			if (suite != undefined && suite.file != undefined) {
+				// prepare Executable for debug and arguments
+				g_debugTestExecutableArgs = this.testExecutableArgs;
+				if (tests.length == 1){
+					const test = this.findNode(this.testSuiteInfo, tests[0]);
+					if (test !== undefined){
+						g_debugTestExecutableArgs += ' ' + test.label.replace(new RegExp('(.*)'), this.testExecutableArgSingleCaseRegex);
+					}
+				}
 				g_debugTestExecutable = path.parse(suite.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
 
 				// Launch debugger
@@ -590,7 +639,12 @@ export class UnityAdapter implements TestAdapter {
 }
 
 let g_debugTestExecutable: string = "";
+let g_debugTestExecutableArgs: string = "";
 
 export function getDebugTestExecutable(): string {
 	return g_debugTestExecutable;
+}
+
+export function getDebugTestExecutableArgs(): string {
+	return g_debugTestExecutableArgs;
 }

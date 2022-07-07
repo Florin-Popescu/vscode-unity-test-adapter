@@ -83,9 +83,8 @@ ID                                 | Command
 
 To set up debugging, create a new Debug Configuration.
 `${command:unityExplorer.debugTestExecutable}` can be used access the test executable filename being ran, with the relative path to it configured by `unityExplorer.testBuildPath`.
+`${command:unityExplorer.debugTestExecutableArgs}` can be used as the executable arguments for the program to debug, constructed according to `unityExplorer.testExecutableArgs` and `unityExplorer.testExecutableArgSingleCaseRegex`
 Then, edit the `unityExplorer.debugConfiguration` settings with the name of the Debug Configuration to run during debug.
-
-Note: Individual test debugging is not supported. Instead the entire test file will be ran, so skip or remove breakpoints accordingly.
 
 Example configuration for `gdb`:
 ```json
@@ -94,7 +93,7 @@ Example configuration for `gdb`:
     "type": "cppdbg",
     "request": "launch",
     "program": "${workspaceFolder}/${command:unityExplorer.debugTestExecutable}",
-    "args": [],
+    "args": ["${command:unityExplorer.debugTestExecutableArgs}"],
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],
