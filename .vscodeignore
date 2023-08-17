@@ -1,6 +1,10 @@
-src/**
-**/*.map
-package-lock.json
-tsconfig.json
 .vscode/**
+.vscode-test/**
+src/**
 .gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+**/*.ts

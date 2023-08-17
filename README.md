@@ -1,4 +1,5 @@
 ## Disclaimer
+
 This extension is for the C Unit Test Framework by [ThrowTheSwitch.org](http://www.throwtheswitch.org/), not for the Video Engine.
 
 # C Unity Test Explorer
@@ -17,14 +18,15 @@ Run your [Unity](http://www.throwtheswitch.org/unity) tests using the
 * Shows a failed test's log when the test is selected in the explorer
 * Lets you choose test suites that should be run automatically after each file change
 
-## Getting started
+## Requirements
 
+* This extension assumes you have [Unity](http://www.throwtheswitch.org/unity) available and configured for your project.
 * Install the extension and restart VS Code
 * Open the workspace or folder containing your Unity framework project
 * [Configure](#options) the extension based on your project's needs. Minimum required configurations:
-    * `unityExplorer.testSourceFileRegex` - regex used to find test source files. It must distinguish between the unit test sources and the production sources.
-	* `unityExplorer.testCaseRegex` - regex used to find test cases in a test source file. The name of the test must be put in a matching group (inside parenthesis).
-	* `unityExplorer.testExecutableArgs` - if using Unity Fixtures (instead of the regular Unity test macros) this must be set to `-v`. This is because the extension expects even passed tests to have some output to distinguish from tests which weren't run at all, and this is only provided with `-v`.
+  * `unityExplorer.testSourceFileRegex` - regex used to find test source files. It must distinguish between the unit test sources and the production sources.
+  * `unityExplorer.testCaseRegex` - regex used to find test cases in a test source file. The name of the test must be put in a matching group (inside parenthesis).
+  * `unityExplorer.testExecutableArgs` - if using Unity Fixtures (instead of the regular Unity test macros) this must be set to `-v`. This is because the extension expects even passed tests to have some output to distinguish from tests which weren't run at all, and this is only provided with `-v`.
 * Open the Test view
 * Run your tests using the ![Run](img/run.png) icons in the Test Explorer or the CodeLenses in your test file
 
@@ -40,7 +42,7 @@ Example folder structure:
 `./src/foo.c` - a testable source file
 `bar()` - a function in `foo.c` which should be unit tested
 `./testsrc` - the folder where the unit test sources are to be found
-`./testsrc/fooTest.c `- a unit test for `foo.c`
+`./testsrc/fooTest.c`- a unit test for `foo.c`
 `test_bar1()` and `test_bar2()` - actual unit tests: functions in `fooTest.c` which test `bar()` in `foo.c`
 `./out/test` - the path to the built unit tests
 `./out/test/fooTest.exe` - the executable which would be built by the extension to run the tests in `fooTest.c`
@@ -87,6 +89,7 @@ Then, edit the `unityExplorer.debugConfiguration` settings with the name of the 
 Note: Individual test debugging is not supported. Instead the entire test file will be ran, so skip or remove breakpoints accordingly.
 
 Example configuration for `gdb`:
+
 ```json
 {
     "name": "Unity Test Explorer Debug",
