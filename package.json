@@ -25,7 +25,9 @@
     "test",
     "testing"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:c"
+  ],
   "main": "out/main.js",
   "contributes": {
     "configuration": {
