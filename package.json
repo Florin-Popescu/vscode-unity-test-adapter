@@ -16,7 +16,7 @@
     "url": "https://github.com/Florin-Popescu/vscode-unity-test-adapter/issues"
   },
   "engines": {
-    "vscode": "^1.81.0"
+    "vscode": "^1.59.0"
   },
   "categories": [
     "Other"
@@ -51,28 +51,16 @@
           "default": "(.*)",
           "scope": "resource"
         },
-        "unityExplorer.unitUnderTestFolder": {
+        "unityExplorer.unitUnderTestGlobPattern": {
           "markdownDescription": "The path the extension should use to look for the unit under test source files. By default the workspace root is used.",
           "type": "string",
-          "default": ".",
+          "default": "**/*.{c,h}",
           "scope": "resource"
         },
-        "unityExplorer.unitUnderTestFileRegex": {
-          "markdownDescription": "Regular expression against which unit under test source files should match. These are tracked for changes to mark test results as old if not re-run.",
-          "type": "string",
-          "default": "\\w+\\.[ch]",
-          "scope": "resource"
-        },
-        "unityExplorer.testSourceFolder": {
+        "unityExplorer.testSourceGlobPattern": {
           "markdownDescription": "The path the extension should use to look for the unit test source files. By default the workspace root is used.",
           "type": "string",
-          "default": ".",
-          "scope": "resource"
-        },
-        "unityExplorer.testSourceFileRegex": {
-          "markdownDescription": "Regular expression against which test source files should match.",
-          "type": "string",
-          "default": "test_",
+          "default": "**/test_*.{c,h}",
           "scope": "resource"
         },
         "unityExplorer.testCaseRegex": {
@@ -118,11 +106,6 @@
           "markdownDescription": "Any additional arguments that need to be passed to the test executable when running it.",
           "type": "string",
           "scope": "resource"
-        },
-        "unityExplorer.testExecutableArgSingleCaseRegex": {
-          "markdownDescription": "Regular expression which should be applied to a test case (not the pretty-fied label) and passed as argument to the test executable to only run that test case. This speeds up execution when a single test case of a large file is needed to be run. A `$1` will be replaced with the test case name. By default all the file's test cases are run even if a single test case is run from the interface.",
-          "type": "string",
-          "scope": "resource"
         }
       }
     }
@@ -150,6 +133,7 @@
   },
   "dependencies": {
     "async-mutex": "^0.4.0",
+    "glob-to-regexp": "^0.4.1",
     "tree-kill": "^1.2.2"
   }
 }
