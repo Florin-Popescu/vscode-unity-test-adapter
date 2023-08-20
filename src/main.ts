@@ -3,15 +3,17 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { TestAdapterRegistrar } from 'vscode-test-adapter-util';
-import { UnityAdapter, getDebugTestExecutable } from './adapter';
+import { UnityAdapter } from './adapter';
+
+let unityAdapter: UnityAdapter;
 
 function getCurrentDebugConfiguration(): string {
-    const currentExec = getDebugTestExecutable();
-    if (!currentExec) {
-        vscode.window.showErrorMessage("Not currently debugging a Unity Test");
-        return "";
-    }
-    return currentExec;
+	const currentExec = unityAdapter.getDebugTestExecutable();
+	if (!currentExec) {
+		vscode.window.showErrorMessage("Not currently debugging a Unity Test");
+		return "";
+	}
+	return currentExec;
 }
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -24,10 +26,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);
 	if (testExplorerExtension) {
-        context.subscriptions.push(vscode.commands.registerCommand("unityExplorer.debugTestExecutable", getCurrentDebugConfiguration));
+		context.subscriptions.push(vscode.commands.registerCommand("unityExplorer.debugTestExecutable", getCurrentDebugConfiguration));
 		context.subscriptions.push(new TestAdapterRegistrar(
 			testExplorerExtension.exports,
-			workspaceFolder => new UnityAdapter(workspaceFolder, outputChannel)
-		));
+			workspaceFolder => {
+				unityAdapter = new UnityAdapter(workspaceFolder, outputChannel);
+
+				return unityAdapter;
+			}));
 	}
 }
