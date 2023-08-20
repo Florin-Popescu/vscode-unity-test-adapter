@@ -165,7 +165,7 @@ export class UnityAdapter implements TestAdapter {
 			let result = await this.runCommand(this.preBuildCommand);
 			if (result.error) {
 				vscode.window.showErrorMessage('Cannot run pre-build command.');
-			return;
+				return;
 			}
 		}
 
@@ -401,7 +401,7 @@ export class UnityAdapter implements TestAdapter {
 					},
 				)
 			});
-		}  catch {
+		} catch {
 
 		}
 		finally {
@@ -414,7 +414,7 @@ export class UnityAdapter implements TestAdapter {
 
 		if (node.file != undefined) {
 			let target = path.parse(node.file).name.replace(new RegExp('(.*)'), this.testBuildTargetRegex);
-			target = target.replace(/\\/g,'/');
+			target = target.replace(/\\/g, '/');
 
 			return await this.runBuildCommand(buildArgs + ' ' + target);
 		}
@@ -442,7 +442,7 @@ export class UnityAdapter implements TestAdapter {
 				let result = await this.runCommand(this.preBuildCommand);
 				if (result.error) {
 					vscode.window.showErrorMessage('Cannot run pre-build command.');
-				return;
+					return;
 				}
 			}
 
@@ -456,7 +456,7 @@ export class UnityAdapter implements TestAdapter {
 				this.outputChannel.append(result.stderr);
 				if (result.error) {
 					vscode.window.showErrorMessage('Cannot build test executable.');
-				return;
+					return;
 				}
 			}
 
@@ -477,10 +477,14 @@ export class UnityAdapter implements TestAdapter {
 
 	cancel(): void {
 		if (this.buildProcess !== undefined) {
-			tree_kill(this.buildProcess.pid);
+			if (this.buildProcess.pid !== undefined) {
+				tree_kill(this.buildProcess.pid);
+			}
 		}
 		if (this.suiteProcess !== undefined) {
-			tree_kill(this.suiteProcess.pid);
+			if (this.suiteProcess.pid !== undefined) {
+				tree_kill(this.suiteProcess.pid);
+			}
 		}
 	}
 
@@ -515,7 +519,7 @@ export class UnityAdapter implements TestAdapter {
 		try {
 			filesAndFolders = await fs.promises.readdir(filePath);
 		} catch (err) {
-			vscode.window.showErrorMessage('Cannot find test result path!', err);
+			vscode.window.showErrorMessage('Cannot find test result path: ' + err);
 			return [''];
 		} finally {
 			for (const item of filesAndFolders) {
