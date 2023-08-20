@@ -40,16 +40,19 @@
         "unityExplorer.prettyTestCaseRegex": {
           "markdownDescription": "Regular expression to be used to simplify the test case label which by default is the full function name. Put what you want to keep in the first matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test_BlinkTaskShouldToggleLed` to `BlinkTaskShouldToggleLed`, regular expression which could be used is `test_(\\w+)`.",
           "type": "string",
+          "default": "(.*)",
           "scope": "resource"
         },
         "unityExplorer.prettyTestFileRegex": {
           "markdownDescription": "Regular expression to be used to simplify the test file label which by default contains the relative path to the file as well as its extension. Put what you want to keep in the first matching group and the rest will be removed. Leave blank to disable this. E.g. To go from `test/LEDs/test_BlinkTask.c` to `BlinkTask`, regular expression which could be used is `test_(\\w+)\\.c`.",
           "type": "string",
+          "default": "(.*)",
           "scope": "resource"
         },
         "unityExplorer.unitUnderTestFolder": {
           "markdownDescription": "The path the extension should use to look for the unit under test source files. By default the workspace root is used.",
           "type": "string",
+          "default": ".",
           "scope": "resource"
         },
         "unityExplorer.unitUnderTestFileRegex": {
@@ -61,6 +64,7 @@
         "unityExplorer.testSourceFolder": {
           "markdownDescription": "The path the extension should use to look for the unit test source files. By default the workspace root is used.",
           "type": "string",
+          "default": ".",
           "scope": "resource"
         },
         "unityExplorer.testSourceFileRegex": {
@@ -88,6 +92,7 @@
         "unityExplorer.testBuildCwdPath": {
           "markdownDescription": "The current working directory where the build command will be run in. By default the workspace root is used.",
           "type": "string",
+          "default": ".",
           "scope": "resource"
         },
         "unityExplorer.testBuildArgs": {
@@ -98,11 +103,13 @@
         "unityExplorer.testBuildTargetRegex": {
           "markdownDescription": "Regular expression which should be applied to the test source file name (without extension) to produce a target for the build system. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `make unitTest` will be called).",
           "type": "string",
+          "default": "$1",
           "scope": "resource"
         },
         "unityExplorer.testExecutableRegex": {
           "markdownDescription": "Regular expression which should be applied to the test source file name (without extension) to produce the executable file name to run the test. A `$1` will be replaced with the file name. By default just the source file name without extension will be used (e.g. for `test/unitTest.c`, `unitTest` will be ran).",
           "type": "string",
+          "default": "$1",
           "scope": "resource"
         },
         "unityExplorer.testExecutableArgs": {
