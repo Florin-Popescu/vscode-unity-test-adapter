@@ -94,6 +94,7 @@ export class TestLoader {
 				line = line + match[0].substr(0, match[0].search(/\S/g)).split('\n').length - 1;
 
 				let testItem = controller.createTestItem(testName, testLabel, testUri);
+				testItem.range = new vscode.Range(new vscode.Position(line, 0), new vscode.Position(line, match[0].length));
 
 				file.children.add(testItem);
 				match = testRegex.exec(fileText);
