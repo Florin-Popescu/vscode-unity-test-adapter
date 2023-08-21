@@ -104,6 +104,7 @@ export class TestLoader {
 		let testSuite = new Array<vscode.TestItem>;
 
 		if (file !== undefined && file.uri !== undefined) {
+			file.busy = true;
 			const testRegex = new RegExp(this.testCaseRegex, 'gm');
 			const fileText = await fs.promises.readFile(file.uri?.fsPath, 'utf8');
 
@@ -123,6 +124,7 @@ export class TestLoader {
 				file.children.add(testItem);
 				match = testRegex.exec(fileText);
 			}
+			file.busy = false;
 		}
 
 		return testSuite;
@@ -148,7 +150,7 @@ export class TestLoader {
 				watcher.onDidDelete(uri => controller.items.delete(uri.toString()));
 
 				for (const file of await vscode.workspace.findFiles(pattern)) {
-					this.parseTestsInFileContents(this.controller, this.getOrCreateFile(file));
+					this.getOrCreateFile(file);
 				}
 
 				return watcher;
