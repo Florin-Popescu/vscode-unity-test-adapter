@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		};
 
-		controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, request => testRunner.runTests(controller, request), true);
+		controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => testRunner.runTests(controller, false, request, testLoader.parseTestsInFileContents), true);
 
 		// context.subscriptions.push(vscode.commands.registerCommand("unityExplorer.debugTestExecutable", getCurrentDebugConfiguration));
 		// context.subscriptions.push(new TestAdapterRegistrar(

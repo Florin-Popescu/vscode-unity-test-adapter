@@ -78,14 +78,52 @@ export class TestRunner {
 
 	async runTests(
 		controller: vscode.TestController,
+		shouldDebug: boolean,
 		request: vscode.TestRunRequest,
+		parseTestsInFileContents: Function
 	): Promise<void> {
 		const run = controller.createTestRun(request);
+		const queue: vscode.TestItem[] = [];
 
+		// Loop through all included tests, or all known tests, and add them to our queue
 		if (request.include) {
-			await Promise.all(request.include.map(t => this.runNode(t, request, run)));
+			request.include.forEach(test => queue.push(test));
 		} else {
-			await Promise.all(mapTestItems(controller.items, t => this.runNode(t, request, run)));
+			controller.items.forEach(test => queue.push(test));
+		}
+
+		run.token.onCancellationRequested(() => {
+			this.cancel();
+		});
+
+		// For every test that was queued, try to run it. Call run.passed() or run.failed().
+		// The `TestMessage` can contain extra information, like a failing location or
+		// a diff output. But here we'll just give it a textual message.
+		while (queue.length > 0 && !run.token.isCancellationRequested) {
+			const test = queue.pop()!;
+
+			// Skip tests the user asked to exclude
+			if (request.exclude?.includes(test)) {
+				continue;
+			}
+
+			run.started(test);
+
+			let runResult = await this.runNode(test, run);
+
+			if (run.token.isCancellationRequested) {
+				run.skipped(test);
+				continue;
+			}
+
+			if (test.canResolveChildren) {
+				// If we're running a file and don't know what it contains yet, parse it now
+				if (test.children.size === 0) {
+					await parseTestsInFileContents(test);
+				}
+			}
+
+			this.checkTestRunResult(test, runResult.stdout, run);
 		}
 
 		run.end();
@@ -93,27 +131,19 @@ export class TestRunner {
 
 	async runNode(
 		node: vscode.TestItem,
-		request: vscode.TestRunRequest,
 		run: vscode.TestRun
-	) {
-		let testCasePassed: boolean;
-
-		// Users can hide or filter out tests from their run. If the request says
-		// they've done that for this node, then don't run it.
-		if (request.exclude?.includes(node)) {
-			return;
-		}
-
-		run.started(node);
-
+	): Promise<any> {
 		if (node.uri === undefined) {
 			run.errored(node, new vscode.TestMessage('Cannot find test executable.'));
 			return;
 		}
 
-		let testFileResult = await this.buildTest(node);
+		let runResult = await this.buildTest(node);
 
-		if (testFileResult.error) {
+		if (run.token.isCancellationRequested) {
+			return;
+		}
+		else if (runResult.error) {
 			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
 			return;
 		}
@@ -126,29 +156,42 @@ export class TestRunner {
 			}
 		}
 
-		if (node.children.size > 0) {
+		if (run.token.isCancellationRequested) {
+			return;
+		}
+		else if (node.canResolveChildren) {
 			// Test has children, so it's a file that was requested to be run. Run it only once.
-			testFileResult = await this.runEntireTestFile(node);
+			runResult = await this.runEntireTestFile(node);
 		}
 		else {
 			// Only a single test case requested
-			testFileResult = await this.runSingleTestCase(node);
+			runResult = await this.runSingleTestCase(node);
 		}
 
-		if (testFileResult.error) {
+		if (runResult.error) {
 			run.errored(node, new vscode.TestMessage('Cannot run test executable.'));
 			return;
 		}
 
-		if (node.children.size > 0) {
+		return runResult;
+	}
+
+	checkTestRunResult(
+		node: vscode.TestItem,
+		runResult: string,
+		run: vscode.TestRun
+	) {
+		let testCasePassed: boolean;
+
+		if (node.canResolveChildren) {
 			let testFilePassed = true;
 			// Test has children, so it's a file that was requested to be run. Mark all test results inside it accordingly.
 			for (const testCase of node.children) {
-				testCasePassed = this.checkTestCaseResult(testCase[1], testFileResult.stdout, run);
+				testCasePassed = this.checkTestCaseResult(testCase[1], runResult, run);
 
 				if (!testCasePassed) {
 					// Consider entire file failed if only one test case inside failed
-					run.failed(node, new vscode.TestMessage(testFileResult));
+					run.failed(node, new vscode.TestMessage(runResult));
 					testFilePassed = false;
 				}
 			}
@@ -159,17 +202,17 @@ export class TestRunner {
 		}
 		else {
 			// Only a single test case requested
-			this.checkTestCaseResult(node, testFileResult.stdout, run);
+			this.checkTestCaseResult(node, runResult, run);
 		}
 	}
 
 	checkTestCaseResult(
 		node: vscode.TestItem,
-		suiteResult: string,
+		runResult: string,
 		run: vscode.TestRun
 	): boolean {
 		let testCaseRegex = new RegExp(node.id + '\\) ' + this.testResultString);
-		let match = testCaseRegex.exec(suiteResult);
+		let match = testCaseRegex.exec(runResult);
 		let testPassed = false;
 
 		if (match !== null) {
@@ -178,7 +221,7 @@ export class TestRunner {
 				run.passed(node);
 			} else {
 				let testFailRegex = new RegExp(this.testFailLineNrRegex + '.*' + node.id + '.*' + this.testResultString);
-				match = testFailRegex.exec(suiteResult);
+				match = testFailRegex.exec(runResult);
 
 				if (match !== null) {
 					//Regular Unity format
@@ -186,7 +229,7 @@ export class TestRunner {
 				}
 				else {
 					testFailRegex = new RegExp(node.id + '.*' + this.testFailLineNrRegex + '.*' + this.testResultString);
-					match = testFailRegex.exec(suiteResult);
+					match = testFailRegex.exec(runResult);
 
 					if (match !== null) {
 						//Unity Fixture format
