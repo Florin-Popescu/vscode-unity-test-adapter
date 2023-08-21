@@ -7,7 +7,10 @@ export class TestLoader {
 	private workspace: readonly vscode.WorkspaceFolder[] | undefined;
 	prettyTestCaseRegex: string;
 	prettyTestFileRegex: string;
-	testSourceGlobPattern: string;
+	unitUnderTestFolder: string;
+	unitUnderTestFileRegex: string;
+	testSourceFolder: string;
+	testSourceFileRegex: string;
 	testCaseRegex: string;
 
 	constructor(private controller: vscode.TestController) {
@@ -15,7 +18,10 @@ export class TestLoader {
 
 		this.prettyTestCaseRegex = ConfigurationProvider.getString('prettyTestCaseRegex');
 		this.prettyTestFileRegex = ConfigurationProvider.getString('prettyTestFileRegex');
-		this.testSourceGlobPattern = ConfigurationProvider.getString('testSourceGlobPattern');
+		this.unitUnderTestFolder = ConfigurationProvider.getString('unitUnderTestFolder');
+		this.unitUnderTestFileRegex = ConfigurationProvider.getString('unitUnderTestFileRegex');
+		this.testSourceFolder = ConfigurationProvider.getString('testSourceFolder');
+		this.testSourceFileRegex = ConfigurationProvider.getString('testSourceFileRegex');
 		this.testCaseRegex = ConfigurationProvider.getString('testCaseRegex');
 
 		// When text documents are open, parse tests in them.
@@ -31,8 +37,17 @@ export class TestLoader {
 				if (event.affectsConfiguration('unityExplorer.prettyTestFileRegex')) {
 					this.prettyTestFileRegex = ConfigurationProvider.getString('prettyTestFileRegex');
 				}
-				if (event.affectsConfiguration('unityExplorer.testSourceGlobPattern')) {
-					this.testSourceGlobPattern = ConfigurationProvider.getString('testSourceGlobPattern');
+				if (event.affectsConfiguration('unityExplorer.unitUnderTestFolder')) {
+					this.unitUnderTestFolder = ConfigurationProvider.getPath('unitUnderTestFolder');
+				}
+				if (event.affectsConfiguration('unityExplorer.unitUnderTestFileRegex')) {
+					this.unitUnderTestFileRegex = ConfigurationProvider.getString('unitUnderTestFileRegex');
+				}
+				if (event.affectsConfiguration('unityExplorer.testSourceFolder')) {
+					this.testSourceFolder = ConfigurationProvider.getPath('testSourceFolder');
+				}
+				if (event.affectsConfiguration('unityExplorer.testSourceFileRegex')) {
+					this.testSourceFileRegex = ConfigurationProvider.getString('testSourceFileRegex');
 				}
 				if (event.affectsConfiguration('unityExplorer.testCaseRegex')) {
 					this.testCaseRegex = ConfigurationProvider.getString('testCaseRegex');
@@ -43,31 +58,41 @@ export class TestLoader {
 		});
 	}
 
-	// In this function, we'll get the file TestItem if we've already found it,
-	// otherwise we'll create it with `canResolveChildren = true` to indicate it
-	// can be passed to the `controller.resolveHandler` to gets its children.
 	private getOrCreateFile(uri: vscode.Uri) {
 		const existing = this.controller.items.get(uri.toString());
 		if (existing) {
 			return existing;
 		}
 
-		const fileLabel = this.setFileLabel(uri.fsPath);
-		const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
-		this.controller.items.add(testFile);
-		testFile.canResolveChildren = true;
+		if (this.workspace) {
+			for (const workspaceFolder of this.workspace) {
+				if (uri.toString().includes(workspaceFolder.uri.toString())) {
+					var fileMatch = new RegExp(this.testSourceFileRegex).test(uri.fsPath);
+					var relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
+					var folderMatch = relativePath.includes(this.testSourceFolder);
 
-		return testFile;
+					if (fileMatch && folderMatch) {
+						const fileLabel = this.setFileLabel(uri.fsPath);
+						const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
+						this.controller.items.add(testFile);
+						testFile.canResolveChildren = true;
+
+						return testFile;
+					}
+				}
+			}
+		}
 	}
 
 	private parseTestsInDocument(document: vscode.TextDocument) {
 		if (this.workspace) {
 			for (const workspaceFolder of this.workspace) {
 				if (document.uri.toString().includes(workspaceFolder.uri.toString())) {
-					var globToRegExp = require('glob-to-regexp');
+					var fileMatch = new RegExp(this.testSourceFileRegex).test(document.uri.fsPath);
 					var relativePath = path.relative(workspaceFolder.uri.fsPath, document.uri.fsPath);
+					var folderMatch = relativePath.includes(this.testSourceFolder);
 
-					if (document.uri.scheme === 'file' && globToRegExp(this.testSourceGlobPattern).test(relativePath)) {
+					if (fileMatch && folderMatch) {
 						this.parseTestsInFileContents(this.controller, this.getOrCreateFile(document.uri));
 					}
 				}
@@ -75,11 +100,10 @@ export class TestLoader {
 		}
 	}
 
-	async parseTestsInFileContents(controller: vscode.TestController, file: vscode.TestItem): Promise<vscode.TestItem[]> {
+	async parseTestsInFileContents(controller: vscode.TestController, file: vscode.TestItem | undefined): Promise<vscode.TestItem[]> {
 		let testSuite = new Array<vscode.TestItem>;
 
-		if (file.uri !== undefined) {
-			const fileLabel = this.setFileLabel(file.uri?.fsPath);
+		if (file !== undefined && file.uri !== undefined) {
 			const testRegex = new RegExp(this.testCaseRegex, 'gm');
 			const fileText = await fs.promises.readFile(file.uri?.fsPath, 'utf8');
 
@@ -111,7 +135,7 @@ export class TestLoader {
 
 		return Promise.all(
 			this.workspace.map(async workspaceFolder => {
-				const pattern = new vscode.RelativePattern(workspaceFolder, this.testSourceGlobPattern);
+				const pattern = new vscode.RelativePattern(workspaceFolder, '**/*.c');
 				const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
 				// When files are created, make sure there's a corresponding "file" node in the tree

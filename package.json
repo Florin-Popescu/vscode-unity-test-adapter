@@ -51,21 +51,28 @@
           "default": "(.*)",
           "scope": "resource"
         },
-        "unityExplorer.unitUnderTestGlobPattern": {
+        "unityExplorer.unitUnderTestFolder": {
           "markdownDescription": "The path the extension should use to look for the unit under test source files. By default the workspace root is used.",
           "type": "string",
-          "default": "**/*.{c,h}",
+          "default": ".",
           "scope": "resource"
         },
-        "unityExplorer.testSourceGlobPattern": {
+        "unityExplorer.unitUnderTestFileRegex": {
+          "markdownDescription": "Regular expression against which unit under test source files should match. These are tracked for changes to mark test results as old if not re-run.",
+          "type": "string",
+          "default": "\\w+\\.[ch]",
+          "scope": "resource"
+        },
+        "unityExplorer.testSourceFolder": {
           "markdownDescription": "The path the extension should use to look for the unit test source files. By default the workspace root is used.",
           "type": "string",
-          "default": "**/test_*.{c,h}",
+          "default": ".",
           "scope": "resource"
         },
-        "unityExplorer.testCaseRegex": {
-          "markdownDescription": "Regular expression against which test cases in a file should match. The actual test case name must be put in the first matching group.",
+        "unityExplorer.testSourceFileRegex": {
+          "markdownDescription": "Regular expression against which test source files should match.",
           "type": "string",
+          "default": "test_\\w+\\.c",
           "scope": "resource"
         },
         "unityExplorer.preBuildCommand": {
@@ -133,7 +140,6 @@
   },
   "dependencies": {
     "async-mutex": "^0.4.0",
-    "glob-to-regexp": "^0.4.1",
     "tree-kill": "^1.2.2"
   }
 }
