@@ -183,15 +183,6 @@ export class TestRunner {
 				if (match !== null) {
 					//Regular Unity format
 					run.failed(node, new vscode.TestMessage(match[3]));
-					// testStatesEmitter.fire(<TestEvent>{
-					// 	type: 'test',
-					// 	test: node.id,
-					// 	state: 'failed',
-					// 	decorations: [{
-					// 		line: parseInt(match[1]) - 1,
-					// 		message: match[3]
-					// 	}]
-					// });
 				}
 				else {
 					testFailRegex = new RegExp(node.id + '.*' + this.testFailLineNrRegex + '.*' + this.testResultString);
@@ -200,15 +191,6 @@ export class TestRunner {
 					if (match !== null) {
 						//Unity Fixture format
 						run.failed(node, new vscode.TestMessage(match[3]));
-						// testStatesEmitter.fire(<TestEvent>{
-						// 	type: 'test',
-						// 	test: node.id,
-						// 	state: 'failed',
-						// 	decorations: [{
-						// 		line: parseInt(match[1]) - 1,
-						// 		message: match[3]
-						// 	}]
-						// });
 					}
 				}
 			}
@@ -257,33 +239,6 @@ export class TestRunner {
 			release();
 		}
 	}
-
-	// findSuite(searchNode: TestSuiteInfo, id: string): TestSuiteInfo | undefined {
-	// 	if (searchNode.type === 'suite') {
-	// 		for (const child of searchNode.children) {
-	// 			if (child.id === id) {
-	// 				if (child.type === 'suite') return child;
-	// 				else return searchNode;
-	// 			} else if (child.type === 'suite') {
-	// 				const found = this.findSuite(child, id);
-	// 				if (found) return found;
-	// 			}
-	// 		}
-	// 	}
-	// 	return undefined;
-	// }
-
-	// findNode(searchNode: TestSuiteInfo | TestInfo, id: string): TestSuiteInfo | TestInfo | undefined {
-	// 	if (searchNode.id === id) {
-	// 		return searchNode;
-	// 	} else if (searchNode.type === 'suite') {
-	// 		for (const child of searchNode.children) {
-	// 			const found = this.findNode(child, id);
-	// 			if (found) return found;
-	// 		}
-	// 	}
-	// 	return undefined;
-	// }
 
 	private async buildTest(node: vscode.TestItem): Promise<any> {
 		if (node.uri !== undefined) {
