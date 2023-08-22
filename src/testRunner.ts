@@ -69,6 +69,10 @@ export class TestRunner {
 		this._debugConfiguration = value;
 	}
 	public get debugTestExecutable(): string {
+		if (!this._debugTestExecutable) {
+			vscode.window.showErrorMessage("Not currently debugging a Unity Test");
+			return "";
+		}
 		return this._debugTestExecutable;
 	}
 
