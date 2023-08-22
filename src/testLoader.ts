@@ -59,16 +59,18 @@ export class TestLoader {
 			return existing;
 		}
 
-		var fileMatch = new RegExp(this.testSourceFileRegex).test(uri.fsPath);
-		var folderMatch = uri.fsPath.includes(this.testSourceFolder);
+		if (uri.scheme === 'file') {
+			var fileMatch = new RegExp(this.testSourceFileRegex).test(uri.fsPath);
+			var folderMatch = uri.fsPath.includes(this.testSourceFolder);
 
-		if (fileMatch && folderMatch) {
-			const fileLabel = this.setFileLabel(uri);
-			const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
-			this.controller.items.add(testFile);
-			testFile.canResolveChildren = true;
+			if (fileMatch && folderMatch) {
+				const fileLabel = this.setFileLabel(uri);
+				const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
+				this.controller.items.add(testFile);
+				testFile.canResolveChildren = true;
 
-			return testFile;
+				return testFile;
+			}
 		}
 	}
 
