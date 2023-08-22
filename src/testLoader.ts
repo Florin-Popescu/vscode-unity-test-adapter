@@ -15,9 +15,9 @@ export class TestLoader {
 	constructor(private controller: vscode.TestController) {
 		this.prettyTestCaseRegex = ConfigurationProvider.getString('prettyTestCaseRegex');
 		this.prettyTestFileRegex = ConfigurationProvider.getString('prettyTestFileRegex');
-		this.unitUnderTestFolder = ConfigurationProvider.getString('unitUnderTestFolder');
+		this.unitUnderTestFolder = ConfigurationProvider.getPath('unitUnderTestFolder');
 		this.unitUnderTestFileRegex = ConfigurationProvider.getString('unitUnderTestFileRegex');
-		this.testSourceFolder = ConfigurationProvider.getString('testSourceFolder');
+		this.testSourceFolder = ConfigurationProvider.getPath('testSourceFolder');
 		this.testSourceFileRegex = ConfigurationProvider.getString('testSourceFileRegex');
 		this.testCaseRegex = ConfigurationProvider.getString('testCaseRegex');
 
@@ -59,39 +59,25 @@ export class TestLoader {
 			return existing;
 		}
 
-		if (vscode.workspace.workspaceFolders) {
-			for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-				if (uri.toString().includes(workspaceFolder.uri.toString())) {
-					var fileMatch = new RegExp(this.testSourceFileRegex).test(uri.fsPath);
-					var relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
-					var folderMatch = relativePath.includes(this.testSourceFolder);
+		var fileMatch = new RegExp(this.testSourceFileRegex).test(uri.fsPath);
+		var folderMatch = uri.fsPath.includes(this.testSourceFolder);
 
-					if (fileMatch && folderMatch) {
-						const fileLabel = this.setFileLabel(uri.fsPath);
-						const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
-						this.controller.items.add(testFile);
-						testFile.canResolveChildren = true;
+		if (fileMatch && folderMatch) {
+			const fileLabel = this.setFileLabel(uri);
+			const testFile = this.controller.createTestItem(uri.toString(), fileLabel, uri);
+			this.controller.items.add(testFile);
+			testFile.canResolveChildren = true;
 
-						return testFile;
-					}
-				}
-			}
+			return testFile;
 		}
 	}
 
 	private parseTestsInDocument(document: vscode.TextDocument) {
-		if (vscode.workspace.workspaceFolders) {
-			for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-				if (document.uri.toString().includes(workspaceFolder.uri.toString())) {
-					var fileMatch = new RegExp(this.testSourceFileRegex).test(document.uri.fsPath);
-					var relativePath = path.relative(workspaceFolder.uri.fsPath, document.uri.fsPath);
-					var folderMatch = relativePath.includes(this.testSourceFolder);
+		var fileMatch = new RegExp(this.testSourceFileRegex).test(document.uri.fsPath);
+		var folderMatch = document.uri.fsPath.includes(this.testSourceFolder);
 
-					if (fileMatch && folderMatch) {
-						this.parseTestsInFileContents(this.controller, this.getOrCreateFile(document.uri));
-					}
-				}
-			}
+		if (fileMatch && folderMatch) {
+			this.parseTestsInFileContents(this.controller, this.getOrCreateFile(document.uri));
 		}
 	}
 
@@ -167,19 +153,20 @@ export class TestLoader {
 		return testLabel;
 	}
 
-	private setFileLabel(fileName: string): string {
+	private setFileLabel(uri: vscode.Uri): string {
 		let fileLabel;
 
-		if (vscode.workspace.workspaceFolders !== undefined) {
-			fileLabel = path.relative(vscode.workspace.workspaceFolders[0].uri.fsPath, fileName);
+		let workspace = ConfigurationProvider.getWorkspace(uri);
+		if (workspace) {
+			fileLabel = path.relative(workspace.uri.fsPath, uri.fsPath);
 		}
 		else {
-			fileLabel = fileName;
+			fileLabel = uri.fsPath;
 		}
 
 		if (this.prettyTestFileRegex !== '') {
 			const labelFileRegex = new RegExp(this.prettyTestFileRegex);
-			let labelMatches = labelFileRegex.exec(fileName);
+			let labelMatches = labelFileRegex.exec(fileLabel);
 			if (labelMatches !== null) {
 				fileLabel = labelMatches[1];
 			}

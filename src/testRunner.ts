@@ -3,71 +3,28 @@ import * as async_mutex from 'async-mutex';
 import * as tree_kill from 'tree-kill';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
 	private readonly testResultString = '(PASS|FAIL:\ ?(.*))';
 
-	private _debugTestExecutable: string = "";
+	private preBuildCommand: string;
+	private testBuildApplication: string;
+	private testBuildCwdPath: string;
+	private testBuildArgs: string;
+	private testBuildTargetRegex: string;
+	private testExecutableRegex: string;
+	private testExecutableArgs: string;
+	private testExecutableArgNameFilterRegex: string;
+	private debugConfiguration: string;
+
+	private _debugTestExecutable: string = '';
 	private buildProcess: child_process.ChildProcess | undefined;
 	private suiteProcess: child_process.ChildProcess | undefined;
 	private buildMutex: async_mutex.Mutex = new async_mutex.Mutex();
 	private suiteMutex: async_mutex.Mutex = new async_mutex.Mutex();
 
-	public get preBuildCommand(): string {
-		return this._preBuildCommand;
-	}
-	public set preBuildCommand(value: string) {
-		this._preBuildCommand = value;
-	}
-	public get testBuildApplication(): string {
-		return this._testBuildApplication;
-	}
-	public set testBuildApplication(value: string) {
-		this._testBuildApplication = value;
-	}
-	public get testBuildCwdPath(): string {
-		return this._testBuildCwdPath;
-	}
-	public set testBuildCwdPath(value: string) {
-		this._testBuildCwdPath = value;
-	}
-	public get testBuildArgs(): string {
-		return this._testBuildArgs;
-	}
-	public set testBuildArgs(value: string) {
-		this._testBuildArgs = value;
-	}
-	public get testBuildTargetRegex(): string {
-		return this._testBuildTargetRegex;
-	}
-	public set testBuildTargetRegex(value: string) {
-		this._testBuildTargetRegex = value;
-	}
-	public get testExecutableRegex(): string {
-		return this._testExecutableRegex;
-	}
-	public set testExecutableRegex(value: string) {
-		this._testExecutableRegex = value;
-	}
-	public get testExecutableArgs(): string {
-		return this._testExecutableArgs;
-	}
-	public set testExecutableArgs(value: string) {
-		this._testExecutableArgs = value;
-	}
-	public get testExecutableArgNameFilterRegex(): string {
-		return this._testExecutableArgNameFilterRegex;
-	}
-	public set testExecutableArgNameFilterRegex(value: string) {
-		this._testExecutableArgNameFilterRegex = value;
-	}
-	public get debugConfiguration(): string {
-		return this._debugConfiguration;
-	}
-	public set debugConfiguration(value: string) {
-		this._debugConfiguration = value;
-	}
 	public get debugTestExecutable(): string {
 		if (!this._debugTestExecutable) {
 			vscode.window.showErrorMessage("Not currently debugging a Unity Test");
@@ -76,8 +33,46 @@ export class TestRunner {
 		return this._debugTestExecutable;
 	}
 
-	constructor(private _workspacePath: string, private _preBuildCommand: string, private _testBuildApplication: string, private _testBuildCwdPath: string, private _testBuildArgs: string, private _testBuildTargetRegex: string, private _testExecutableRegex: string, private _testExecutableArgs: string, private _testExecutableArgNameFilterRegex: string, private _debugConfiguration: string) {
+	constructor() {
+		this.preBuildCommand = ConfigurationProvider.getString('preBuildCommand');
+		this.testBuildApplication = ConfigurationProvider.getString('testBuildApplication');
+		this.testBuildCwdPath = ConfigurationProvider.getPath('testBuildCwdPath');
+		this.testBuildArgs = ConfigurationProvider.getString('testBuildArgs');
+		this.testBuildTargetRegex = ConfigurationProvider.getString('testBuildTargetRegex');
+		this.testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex');
+		this.testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs');
+		this.testExecutableArgNameFilterRegex = ConfigurationProvider.getString('testExecutableArgNameFilterRegex');
+		this.debugConfiguration = ConfigurationProvider.getString('debugConfiguration');
 
+		vscode.workspace.onDidChangeConfiguration(event => {
+			if (vscode.workspace.workspaceFolders !== undefined) {
+				if (event.affectsConfiguration('unityExplorer.preBuildCommand')) {
+					this.preBuildCommand = ConfigurationProvider.getString('preBuildCommand');
+				}
+				if (event.affectsConfiguration('unityExplorer.testBuildApplication')) {
+					this.testBuildApplication = ConfigurationProvider.getString('testBuildApplication');
+				}
+				if (event.affectsConfiguration('unityExplorer.testBuildCwdPath')) {
+					this.testBuildCwdPath = ConfigurationProvider.getPath('testBuildCwdPath');
+				}
+				if (event.affectsConfiguration('unityExplorer.testBuildArgs')) {
+					this.testBuildArgs = ConfigurationProvider.getString('testBuildArgs');
+				}
+				if (event.affectsConfiguration('unityExplorer.testBuildTargetRegex')) {
+					this.testBuildTargetRegex = ConfigurationProvider.getString('testBuildTargetRegex');
+				}
+				if (event.affectsConfiguration('unityExplorer.testExecutableRegex')) {
+					this.testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex');
+				}
+				if (event.affectsConfiguration('unityExplorer.testExecutableArgs')) {
+					this.testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs');
+				}
+				if (event.affectsConfiguration('unityExplorer.testExecutableArgNameFilterRegex')) {
+					this.testExecutableArgNameFilterRegex = ConfigurationProvider.getString('testExecutableArgNameFilterRegex');
+				}
+
+			}
+		});
 	}
 
 	async runTests(
@@ -159,8 +154,8 @@ export class TestRunner {
 			return;
 		}
 
-		if (this._preBuildCommand !== '') {
-			let result = await this.runCommand(this._preBuildCommand);
+		if (this.preBuildCommand !== '') {
+			let result = await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), this.preBuildCommand);
 			if (result.error) {
 				vscode.window.showErrorMessage('Cannot run pre-build command.');
 				return;
@@ -191,7 +186,7 @@ export class TestRunner {
 		node: vscode.TestItem,
 		run: vscode.TestRun
 	): Promise<any> {
-		if (this._debugConfiguration === undefined) {
+		if (this.debugConfiguration === undefined) {
 			vscode.window.showErrorMessage("No debug configuration specified. In Settings, set unityExplorer.debugConfiguration.");
 			return;
 		}
@@ -211,8 +206,8 @@ export class TestRunner {
 			return;
 		}
 
-		if (this._preBuildCommand !== '') {
-			let result = await this.runCommand(this._preBuildCommand);
+		if (this.preBuildCommand !== '') {
+			let result = await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), this.preBuildCommand);
 			if (result.error) {
 				vscode.window.showErrorMessage('Cannot run pre-build command.');
 				return;
@@ -223,15 +218,9 @@ export class TestRunner {
 			return;
 		}
 		else {
-			if (vscode.workspace.workspaceFolders) {
-				for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-					if (node.uri.toString().includes(workspaceFolder.uri.toString())) {
-						this._debugTestExecutable = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
-						if (!await vscode.debug.startDebugging(workspaceFolder, this.debugConfiguration)) {
-							vscode.window.showErrorMessage('Debugger could not be started.');
-						}
-					}
-				}
+			this._debugTestExecutable = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
+			if (!await vscode.debug.startDebugging(ConfigurationProvider.getWorkspace(node.uri), this.debugConfiguration)) {
+				vscode.window.showErrorMessage('Debugger could not be started.');
 			}
 		}
 
@@ -308,14 +297,14 @@ export class TestRunner {
 		return testPassed;
 	}
 
-	async runCommand(command: string): Promise<any> {
+	async runCommand(workspace: vscode.WorkspaceFolder | undefined, command: string): Promise<any> {
 		const release = await this.suiteMutex.acquire();
 		try {
 			return new Promise<any>((resolve) => {
 				this.suiteProcess = child_process.exec(
 					command,
 					{
-						cwd: this._workspacePath,
+						cwd: workspace?.uri.fsPath,
 					},
 					(error, stdout, stderr) => {
 						resolve({ error, stdout, stderr });
@@ -330,14 +319,14 @@ export class TestRunner {
 		}
 	}
 
-	private async runBuildCommand(buildArgs: string): Promise<any> {
+	private async runBuildCommand(workspace: vscode.WorkspaceFolder | undefined, buildArgs: string): Promise<any> {
 		const release = await this.buildMutex.acquire();
 		try {
 			return new Promise<any>((resolve) => {
 				this.buildProcess = child_process.exec(
-					this._testBuildApplication + ' ' + buildArgs,
+					this.testBuildApplication + ' ' + buildArgs,
 					{
-						cwd: this._testBuildCwdPath
+						cwd: workspace?.uri.fsPath,
 					},
 					(error, stdout, stderr) => {
 						resolve({ error, stdout, stderr });
@@ -351,24 +340,24 @@ export class TestRunner {
 
 	private async buildTest(node: vscode.TestItem): Promise<any> {
 		if (node.uri !== undefined) {
-			let target = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this._testBuildTargetRegex);
+			let target = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testBuildTargetRegex);
 
-			return await this.runBuildCommand(this._testBuildArgs + ' ' + target);
+			return await this.runBuildCommand(ConfigurationProvider.getWorkspace(node.uri), this.testBuildArgs + ' ' + target);
 		}
 	}
 
 	private async runEntireTestFile(node: vscode.TestItem): Promise<any> {
 		if (node.uri !== undefined) {
-			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this._testExecutableRegex) + '\"';
+			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
 
-			return await this.runCommand(exePath + ' ' + this._testExecutableArgs);
+			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + this.testExecutableArgs);
 		}
 	}
 
 	private async runSingleTestCase(node: vscode.TestItem): Promise<any> {
 		if (node.uri !== undefined) {
-			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this._testExecutableRegex) + '\"';
-			let testcaseArg = this._testExecutableArgs;
+			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testExecutableRegex) + '\"';
+			let testcaseArg = this.testExecutableArgs;
 
 			if (node.id.match(',')) {
 				//Unity Fixture format
@@ -379,7 +368,7 @@ export class TestRunner {
 				testcaseArg += ' -n ' + node.id;
 			}
 
-			return await this.runCommand(exePath + ' ' + this._testExecutableArgs);
+			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + this.testExecutableArgs);
 		}
 	}
 
