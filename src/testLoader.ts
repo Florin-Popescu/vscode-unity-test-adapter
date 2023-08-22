@@ -57,7 +57,29 @@ export class TestLoader {
 		});
 	}
 
-	private getOrCreateFile(uri: vscode.Uri) {
+	private invalidateIfUnitUnderTest(uri: vscode.Uri) {
+		if (uri.scheme === 'file') {
+			var fileMatch = new RegExp(this.unitUnderTestFileRegex).test(uri.fsPath);
+			var folderMatch = uri.fsPath.includes(this.unitUnderTestFolder);
+
+			if (fileMatch && folderMatch) {
+				this.controller.items.forEach(test => {
+					if (test.uri && path.parse(test.uri.fsPath).name.includes(path.parse(uri.fsPath).name)) {
+						this.controller.invalidateTestResults(test);
+					}
+				});
+			}
+		}
+	}
+
+	private invalidateIfTestSource(uri: vscode.Uri) {
+		let test = this.controller.items.get(uri.toString());
+		if (test) {
+			this.controller.invalidateTestResults(test);
+		}
+	}
+
+	private getOrCreateTestFile(uri: vscode.Uri) {
 		const existing = this.controller.items.get(uri.toString());
 		if (existing) {
 			return existing;
@@ -83,7 +105,7 @@ export class TestLoader {
 		var folderMatch = document.uri.fsPath.includes(this.testSourceFolder);
 
 		if (fileMatch && folderMatch) {
-			this.parseTestsInFileContents(this.controller, this.getOrCreateFile(document.uri));
+			this.parseTestsInFileContents(this.controller, this.getOrCreateTestFile(document.uri));
 		}
 	}
 
@@ -128,16 +150,20 @@ export class TestLoader {
 				const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
 				// When files are created, make sure there's a corresponding "file" node in the tree
-				watcher.onDidCreate(uri => this.getOrCreateFile(uri));
+				watcher.onDidCreate(uri => this.getOrCreateTestFile(uri));
 				// When files change, re-parse them. Note that you could optimize this so
 				// that you only re-parse children that have been resolved in the past.
-				watcher.onDidChange(uri => this.parseTestsInFileContents(this.controller, this.getOrCreateFile(uri)));
+				watcher.onDidChange(uri => {
+					this.parseTestsInFileContents(this.controller, this.getOrCreateTestFile(uri));
+					this.invalidateIfUnitUnderTest(uri);
+					this.invalidateIfTestSource(uri);
+				});
 				// And, finally, delete TestItems for removed files. This is simple, since
 				// we use the URI as the TestItem's ID.
 				watcher.onDidDelete(uri => controller.items.delete(uri.toString()));
 
 				for (const file of await vscode.workspace.findFiles(pattern)) {
-					this.getOrCreateFile(file);
+					this.getOrCreateTestFile(file);
 				}
 
 				return watcher;
