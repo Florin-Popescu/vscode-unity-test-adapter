@@ -27,6 +27,10 @@ export class TestLoader {
 
 		// When configuration is changed, update the internal variables
 		vscode.workspace.onDidChangeConfiguration(event => {
+			if (event.affectsConfiguration('unityExplorer')) {
+				controller.invalidateTestResults();
+			}
+
 			if (event.affectsConfiguration('unityExplorer.prettyTestCaseRegex')) {
 				this.prettyTestCaseRegex = ConfigurationProvider.getString('prettyTestCaseRegex');
 			}
