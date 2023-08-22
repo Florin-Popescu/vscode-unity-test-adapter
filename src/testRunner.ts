@@ -109,21 +109,28 @@ export class TestRunner {
 
 			run.started(test);
 
-			let runResult = await this.runNode(test, run);
+			let runResult: any;
 
-			if (run.token.isCancellationRequested) {
-				run.skipped(test);
-				continue;
+			if (shouldDebug) {
+				runResult = await this.debugNode(test, run);
 			}
+			else {
+				runResult = await this.runNode(test, run);
 
-			if (test.canResolveChildren) {
-				// If we're running a file and don't know what it contains yet, parse it now
-				if (test.children.size === 0) {
-					await parseTestsInFileContents(test);
+				if (run.token.isCancellationRequested) {
+					run.skipped(test);
+					continue;
 				}
-			}
 
-			this.checkTestRunResult(test, runResult.stdout, run);
+				if (test.canResolveChildren) {
+					// If we're running a file and don't know what it contains yet, parse it now
+					if (test.children.size === 0) {
+						await parseTestsInFileContents(test);
+					}
+				}
+
+				this.checkTestRunResult(test, runResult.stdout, run);
+			}
 		}
 
 		run.end();
@@ -174,6 +181,62 @@ export class TestRunner {
 		}
 
 		return runResult;
+	}
+
+	async debugNode(
+		node: vscode.TestItem,
+		run: vscode.TestRun
+	): Promise<any> {
+		if (this._debugConfiguration === undefined) {
+			vscode.window.showErrorMessage("No debug configuration specified. In Settings, set unityExplorer.debugConfiguration.");
+			return;
+		}
+
+		if (node.uri === undefined) {
+			run.errored(node, new vscode.TestMessage('Cannot find test executable.'));
+			return;
+		}
+
+		let runResult = await this.buildTest(node);
+
+		if (run.token.isCancellationRequested) {
+			return;
+		}
+		else if (runResult.error) {
+			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
+			return;
+		}
+
+		if (this._preBuildCommand !== '') {
+			let result = await this.runCommand(this._preBuildCommand);
+			if (result.error) {
+				vscode.window.showErrorMessage('Cannot run pre-build command.');
+				return;
+			}
+		}
+
+		if (run.token.isCancellationRequested) {
+			return;
+		}
+		else {
+			if (vscode.workspace.workspaceFolders) {
+				for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+					if (node.uri.toString().includes(workspaceFolder.uri.toString())) {
+						this._debugTestExecutable = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
+						if (!await vscode.debug.startDebugging(workspaceFolder, this.debugConfiguration)) {
+							vscode.window.showErrorMessage('Debugger could not be started.');
+						}
+						vscode.debug.onDidTerminateDebugSession
+					}
+				}
+			}
+		}
+
+		if (runResult.error) {
+			run.errored(node, new vscode.TestMessage('Cannot run test executable.'));
+		}
+
+		this._debugTestExecutable = "";
 	}
 
 	checkTestRunResult(
@@ -317,43 +380,6 @@ export class TestRunner {
 		}
 	}
 
-	// async debug(suite: TestSuiteInfo,
-	// 	workspace: vscode.WorkspaceFolder,
-	// 	outputChannel: vscode.OutputChannel): Promise<void> {
-	// 	try {
-	// 		//Get and validate debug configuration
-	// 		const debugConfiguration = this._debugConfiguration;
-	// 		if (!debugConfiguration) {
-	// 			vscode.window.showErrorMessage("No debug configuration specified. In Settings, set unityExplorer.debugConfiguration.");
-	// 			return;
-	// 		}
-
-	// 		//Build test suite
-	// 		if (suite !== undefined && suite.type === 'suite') {
-	// 			let result = await this.buildTest(suite);
-	// 			outputChannel.append(result.stdout);
-	// 			outputChannel.append(result.stderr);
-	// 			if (result.error) {
-	// 				vscode.window.showErrorMessage('Cannot build test executable.');
-	// 				return;
-	// 			}
-	// 		}
-
-	// 		// Get test executable file name without extension
-	// 		if (suite != undefined && suite.file != undefined) {
-	// 			this._debugTestExecutable = path.parse(suite.file).name.replace(new RegExp('(.*)'), this.testExecutableRegex);
-
-	// 			// Launch debugger
-	// 			if (!await vscode.debug.startDebugging(workspace, debugConfiguration))
-	// 				vscode.window.showErrorMessage('Debugger could not be started.');
-	// 		}
-	// 	}
-	// 	finally {
-	// 		// Reset current test executable
-	// 		this._debugTestExecutable = "";
-	// 	}
-	// }
-
 	cancel(): void {
 		if (this.buildProcess !== undefined) {
 			if (this.buildProcess.pid !== undefined) {
@@ -367,10 +393,3 @@ export class TestRunner {
 		}
 	}
 }
-
-// Small helper that works like "array.map" for children of a test collection
-const mapTestItems = <T>(items: vscode.TestItemCollection, mapper: (t: vscode.TestItem) => T): T[] => {
-	const result: T[] = [];
-	items.forEach(t => result.push(mapper(t)));
-	return result;
-};

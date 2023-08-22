@@ -7,16 +7,16 @@ import { TestRunner } from './testRunner';
 let testLoader: TestLoader;
 let testRunner: TestRunner;
 
-// function getCurrentDebugConfiguration(): string {
-// 	const currentExec = unityAdapter.getDebugTestExecutable();
-// 	if (!currentExec) {
-// 		vscode.window.showErrorMessage("Not currently debugging a Unity Test");
-// 		return "";
-// 	}
-// 	return currentExec;
-// }
+function getCurrentDebugConfiguration(): string {
+	const currentExec = testRunner.debugTestExecutable;
+	if (!currentExec) {
+		vscode.window.showErrorMessage("Not currently debugging a Unity Test");
+		return "";
+	}
+	return currentExec;
+}
 
-export function watchChanges(controller: vscode.TestController) {
+export function watchChanges() {
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (vscode.workspace.workspaceFolders !== undefined) {
 			if (event.affectsConfiguration('unityExplorer.preBuildCommand')) {
@@ -48,7 +48,6 @@ export function watchChanges(controller: vscode.TestController) {
 	});
 }
 export async function activate(context: vscode.ExtensionContext) {
-	var manifestPath = path.join(context.extensionPath, "package.json");
 	const controller = vscode.tests.createTestController('unity-test-adapter', 'Unity Test Controller');
 
 	if (vscode.workspace.workspaceFolders !== undefined) {
@@ -58,6 +57,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		testRunner = new TestRunner(workspace.uri.fsPath, ConfigurationProvider.getString('preBuildCommand'), ConfigurationProvider.getString('testBuildApplication'), ConfigurationProvider.getPath('testBuildCwdPath'), ConfigurationProvider.getString('testBuildArgs'), ConfigurationProvider.getString('testBuildTargetRegex'), ConfigurationProvider.getString('testExecutableRegex'), ConfigurationProvider.getString('testExecutableArgs'), ConfigurationProvider.getString('testExecutableArgNameFilterRegex'), ConfigurationProvider.getString('debugConfiguration'));
 
 		context.subscriptions.push(controller);
+		context.subscriptions.push(vscode.commands.registerCommand("unityExplorer.debugTestExecutable", getCurrentDebugConfiguration));
 		controller.resolveHandler = async test => {
 			if (!test) {
 				await testLoader.loadAllTests(controller);
@@ -66,15 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		};
 
-		controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => testRunner.runTests(controller, false, request, testLoader.parseTestsInFileContents), true);
-
-		// context.subscriptions.push(vscode.commands.registerCommand("unityExplorer.debugTestExecutable", getCurrentDebugConfiguration));
-		// context.subscriptions.push(new TestAdapterRegistrar(
-		// 	testExplorerExtension.exports,
-		// 	workspaceFolder => {
-		// 		unityAdapter = new UnityAdapter(workspaceFolder, outputChannel);
-
-		// 		return unityAdapter;
-		// 	}));
+		controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, request => testRunner.runTests(controller, false, request, testLoader.parseTestsInFileContents), true);
+		controller.createRunProfile('Debug', vscode.TestRunProfileKind.Debug, request => testRunner.runTests(controller, true, request, testLoader.parseTestsInFileContents), true);
 	}
 }
