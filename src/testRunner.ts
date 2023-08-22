@@ -226,7 +226,6 @@ export class TestRunner {
 						if (!await vscode.debug.startDebugging(workspaceFolder, this.debugConfiguration)) {
 							vscode.window.showErrorMessage('Debugger could not be started.');
 						}
-						vscode.debug.onDidTerminateDebugSession
 					}
 				}
 			}
