@@ -177,7 +177,7 @@ export class TestRunner {
 			runResult = await this.runSingleTestCase(node);
 		}
 
-		if (runResult.error.signal) {
+		if (runResult.error && runResult.error.signal) {
 			run.errored(node, new vscode.TestMessage('Cannot run test executable.'));
 			run.errored(node, new vscode.TestMessage(runResult.error.stack));
 			return;
@@ -275,7 +275,7 @@ export class TestRunner {
 		let testPassed = false;
 
 		if (match !== null) {
-			if (match[1] === 'PASS') {
+			if (match[2] === 'PASS') {
 				testPassed = true;
 				run.passed(node);
 			} else {
