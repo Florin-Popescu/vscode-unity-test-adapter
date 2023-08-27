@@ -292,7 +292,11 @@ export class TestRunner {
 
 					if (match !== null) {
 						//Unity Fixture format
+						let line = +match[1] - 1;
+						let testRange = node.range;
+						node.range = new vscode.Range(new vscode.Position(line, 0), new vscode.Position(line, 0));
 						run.failed(node, new vscode.TestMessage(match[4]));
+						node.range = testRange;
 					}
 				}
 			}
