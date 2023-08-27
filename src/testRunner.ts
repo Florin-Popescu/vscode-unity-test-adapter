@@ -151,6 +151,7 @@ export class TestRunner {
 		}
 		else if (runResult.error) {
 			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
+			run.errored(node, new vscode.TestMessage(runResult.stderr));
 			return;
 		}
 
