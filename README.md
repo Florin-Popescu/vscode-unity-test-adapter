@@ -33,22 +33,22 @@ This extension is for the C Unit Test Framework by [ThrowTheSwitch.org](http://w
 
 ### Options
 
-Example setup:
-`.` - the root of the workspace
-`./makefile` - the makefile which describes how to build the unit tests
-`folders` - a target in the makefile which creates needed folder structure (i.e. creates `./out`)
-`./src` - the folder where all tested sources are to be found
-`./src/foo.c` - a testable source file
-`bar()` - a function in `foo.c` which should be unit tested
-`./testsrc` - the folder where the unit test sources are to be found
-`./testsrc/fooTest.c`- a unit test for `foo.c`
-`test_bar1()` and `test_bar2()` - actual unit tests, functions in `fooTest.c` which test `bar()` in `foo.c`. Applicable for the regular Unity setup.
-`test_bar, case1` and `test_bar, case2` - actual unit tests, functions in `fooTest.c` which test `bar()` in `foo.c`. Applicable for the Unity fixture setup.
-`./out/test` - the path to the built unit tests
-`./out/test/fooTest.exe` - the executable which would be built by the extension to run the tests in `fooTest.c`
-`-v` - the argument which must be passed to `fooTest.exe` to also show passed tests
-`-n test_bar1` - an argument which is passed to `fooTest.exe` to speed up its execution when only running a single test case (named `test_bar1`). Applicable for the regular Unity setup.
-`-g test_bar -n case1` - a set of arguments which are passed to `fooTest.exe` to speed up its execution when only running a single test case (defined as `UNITY_TEST(test_bar, case1)`). Applicable for the Unity fixture setup.
+Example setup:  
+`.` - the root of the workspace  
+`./makefile` - the makefile which describes how to build the unit tests  
+`folders` - a target in the makefile which creates needed folder structure (i.e. creates `./out`)  
+`./src` - the folder where all tested sources are to be found  
+`./src/foo.c` - a testable source file  
+`bar()` - a function in `foo.c` which should be unit tested  
+`./testsrc` - the folder where the unit test sources are to be found  
+`./testsrc/fooTest.c`- a unit test for `foo.c`  
+`test_bar1()` and `test_bar2()` - actual unit tests, functions in `fooTest.c` which test `bar()` in `foo.c`. Applicable for the regular Unity setup.  
+`test_bar, case1` and `test_bar, case2` - actual unit tests, functions in `fooTest.c` which test `bar()` in `foo.c`. Applicable for the Unity fixture setup.  
+`./out/test` - the path to the built unit tests  
+`./out/test/fooTest.exe` - the executable which would be built by the extension to run the tests in `fooTest.c`  
+`-v` - the argument which must be passed to `fooTest.exe` to also show passed tests  
+`-n test_bar1` - an argument which is passed to `fooTest.exe` to speed up its execution when only running a single test case (named `test_bar1`). Applicable for the regular Unity setup.  
+`-g test_bar -n case1` - a set of arguments which are passed to `fooTest.exe` to speed up its execution when only running a single test case (defined as `UNITY_TEST(test_bar, case1)`). Applicable for the Unity fixture setup.  
 
 Property                                | Description                                                   | Example
 ----------------------------------------|---------------------------------------------------------------|-------------------
