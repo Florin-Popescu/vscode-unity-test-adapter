@@ -7,7 +7,7 @@ import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
-	private readonly testResultString = '(PASS|FAIL:\ ?(.*))';
+	private readonly testResultString = '(.*)(PASS|FAIL:\ ?(.*))';
 
 	private preBuildCommand: string;
 	private testBuildApplication: string;
@@ -116,19 +116,21 @@ export class TestRunner {
 			else {
 				runResult = await this.runNode(test, run);
 
-				if (run.token.isCancellationRequested) {
-					run.skipped(test);
-					continue;
-				}
-
-				if (test.canResolveChildren) {
-					// If we're running a file and don't know what it contains yet, parse it now
-					if (test.children.size === 0) {
-						await parseTestsInFileContents(test);
+				if (runResult) {
+					if (run.token.isCancellationRequested) {
+						run.skipped(test);
+						continue;
 					}
-				}
 
-				this.checkTestRunResult(test, runResult.stdout, run);
+					if (test.canResolveChildren) {
+						// If we're running a file and don't know what it contains yet, parse it now
+						if (test.children.size === 0) {
+							await parseTestsInFileContents(test);
+						}
+					}
+
+					this.checkTestRunResult(test, runResult.stdout, run);
+				}
 			}
 		}
 
@@ -268,7 +270,7 @@ export class TestRunner {
 		runResult: string,
 		run: vscode.TestRun
 	): boolean {
-		let testCaseRegex = new RegExp(node.id + '\\) ' + this.testResultString);
+		let testCaseRegex = new RegExp(node.id + '\\)' + this.testResultString);
 		let match = testCaseRegex.exec(runResult);
 		let testPassed = false;
 
@@ -282,7 +284,7 @@ export class TestRunner {
 
 				if (match !== null) {
 					//Regular Unity format
-					run.failed(node, new vscode.TestMessage(match[3]));
+					run.failed(node, new vscode.TestMessage(match[4]));
 				}
 				else {
 					testFailRegex = new RegExp(node.id + '.*' + this.testFailLineNrRegex + '.*' + this.testResultString);
@@ -290,7 +292,7 @@ export class TestRunner {
 
 					if (match !== null) {
 						//Unity Fixture format
-						run.failed(node, new vscode.TestMessage(match[3]));
+						run.failed(node, new vscode.TestMessage(match[4]));
 					}
 				}
 			}
