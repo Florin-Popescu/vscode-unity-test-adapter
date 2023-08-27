@@ -250,13 +250,15 @@ export class TestRunner {
 
 				if (!testCasePassed) {
 					// Consider entire file failed if only one test case inside failed
-					run.failed(node, new vscode.TestMessage(runResult));
 					testFilePassed = false;
 				}
 			}
 
 			if (testFilePassed === true) {
 				run.passed(node);
+			}
+			else {
+				run.failed(node, new vscode.TestMessage(runResult));
 			}
 		}
 		else {
