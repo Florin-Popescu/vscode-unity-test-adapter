@@ -75,6 +75,11 @@
           "default": "test_\\w+\\.c",
           "scope": "resource"
         },
+        "unityExplorer.testCaseRegex": {
+          "markdownDescription": "Regular expression against which test cases in a file should match. The actual test case name must be put in the first matching group.",
+          "type": "string",
+          "scope": "resource"
+        },
         "unityExplorer.preBuildCommand": {
           "markdownDescription": "Any command which must be run before building the unit tests. If empty, no command will be run.",
           "type": "string",
