@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TestLoader } from './testLoader';
 import { TestRunner } from './testRunner';
+import { ConfigurationProvider } from './configurationProvider';
 
 let testLoader: TestLoader;
 let testRunner: TestRunner;
