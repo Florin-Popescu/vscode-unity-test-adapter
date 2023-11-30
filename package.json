@@ -5,7 +5,7 @@
   "icon": "img/icon.png",
   "author": "Florin Popescu",
   "publisher": "fpopescu",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "homepage": "https://github.com/Florin-Popescu/vscode-unity-test-adapter",
   "repository": {
@@ -16,7 +16,7 @@
     "url": "https://github.com/Florin-Popescu/vscode-unity-test-adapter/issues"
   },
   "engines": {
-    "vscode": "^1.59.0"
+    "vscode": "^1.84.0"
   },
   "categories": [
     "Other"
@@ -34,6 +34,12 @@
       "type": "object",
       "title": "Unity Test Explorer",
       "properties": {
+        "unityExplorer.enable": {
+          "markdownDescription": "Configuration to enable or disable the extension for a workspace.",
+          "type": "boolean",
+          "default": true,
+          "scope": "resource"
+        },        
         "unityExplorer.debugConfiguration": {
           "markdownDescription": "Configuration to run when debugging tests.",
           "type": "string",
@@ -128,20 +134,23 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package": "mkdir -p dist && vsce package -o dist/cunity-test.vsix --no-yarn",
+    "deploy:local": "npm run package && code --install-extension dist/cunity-test.vsix --force --profile Exercism",
+    "deploy:local-insiders": "npm run package && code-insiders --install-extension dist/cunity-test.vsix --force --profile Exercism"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "20.2.5",
-    "@types/vscode": "^1.59.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.8",
-    "@typescript-eslint/parser": "^5.59.8",
-    "@vscode/test-electron": "^2.3.2",
-    "eslint": "^8.41.0",
-    "glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "20.10.0",
+    "@types/vscode": "^1.84.2",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.54.0",
+    "glob": "8.1.0",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.3.2"
   },
   "dependencies": {
     "async-mutex": "^0.4.0",
