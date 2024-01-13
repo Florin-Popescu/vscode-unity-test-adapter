@@ -20,10 +20,23 @@ export class TestLoader {
 		this.testSourceFolder = ConfigurationProvider.getPath('testSourceFolder');
 		this.testSourceFileRegex = ConfigurationProvider.getString('testSourceFileRegex');
 		this.testCaseRegex = ConfigurationProvider.getString('testCaseRegex');
+		this.controller = controller;
 
 		// When text documents are open, parse tests in them.
 		vscode.workspace.onDidOpenTextDocument(document =>
 			this.parseTestsInDocument(document));
+
+		// When text documents are saved, reparse tests in them.
+		vscode.workspace.onDidSaveTextDocument(document => {
+			let docNodes: string[] = [];
+			this.controller.items.forEach(item => {
+				if(item.uri?.toString() === document.uri.toString()) {
+					docNodes.push(item.id);
+				}
+			});
+			docNodes.forEach(node => this.controller.items.delete(node));
+			this.parseTestsInDocument(document);
+		});
 
 		// When configuration is changed, update the internal variables
 		vscode.workspace.onDidChangeConfiguration(event => {
