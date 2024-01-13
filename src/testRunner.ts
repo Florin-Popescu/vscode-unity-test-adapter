@@ -7,7 +7,7 @@ import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
-	private readonly testResultString = '(.*):(PASS|FAIL)';
+	private readonly testResultString = '(.*):(PASS|FAIL:\ ?(.*))';
 
 	private preBuildCommand: string;
 	private testBuildApplication: string;
