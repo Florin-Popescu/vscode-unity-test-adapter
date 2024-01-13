@@ -7,7 +7,7 @@ import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
-	private readonly testResultString = '(.*)(PASS|FAIL:\ ?(.*))';
+	private readonly testResultString = '(.*):(PASS|FAIL)';
 
 	private preBuildCommand: string;
 	private testBuildApplication: string;
@@ -272,7 +272,7 @@ export class TestRunner {
 		runResult: string,
 		run: vscode.TestRun
 	): boolean {
-		let testCaseRegex = new RegExp(node.id + '\\)' + this.testResultString);
+		let testCaseRegex = new RegExp(node.id + this.testResultString);
 		let match = testCaseRegex.exec(runResult);
 		let testPassed = false;
 
