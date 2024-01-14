@@ -7,7 +7,7 @@ import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
-	private readonly testResultString = '(.*):(PASS|FAIL:\ ?(.*))';
+	private readonly testResultString = '(.*):(PASS|FAIL:\ ?(.*)|IGNORE(:.*)?)';
 
 	private preBuildCommand: string;
 	private testBuildApplication: string;
@@ -280,6 +280,10 @@ export class TestRunner {
 			if (match[2] === 'PASS') {
 				testPassed = true;
 				run.passed(node);
+			} else if (match[2].startsWith('IGNORE')) {
+				testPassed = true;
+				run.skipped(node);
+				node.description = match[2];
 			} else {
 				let testFailRegex = new RegExp(this.testFailLineNrRegex + '.*' + node.id + '.*' + this.testResultString);
 				match = testFailRegex.exec(runResult);
