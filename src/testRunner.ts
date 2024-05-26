@@ -7,7 +7,7 @@ import { ConfigurationProvider } from './configurationProvider';
 
 export class TestRunner {
 	private readonly testFailLineNrRegex = ':([0-9]+):';
-	private readonly testResultString = '(.*)(PASS|FAIL:\ ?(.*))';
+	private readonly testResultString = '(.*):(PASS|FAIL:\ ?(.*)|IGNORE(:.*)?)';
 
 	private _debugTestExecutable: string = '';
 	private buildProcess: childProcess.ChildProcess | undefined;
@@ -229,7 +229,7 @@ export class TestRunner {
 		runResult: string,
 		run: vscode.TestRun
 	): boolean {
-		let testCaseRegex = new RegExp(node.id + '\\)' + this.testResultString);
+		let testCaseRegex = new RegExp(node.id + this.testResultString);
 		let match = testCaseRegex.exec(runResult);
 		let testPassed = false;
 
@@ -237,6 +237,10 @@ export class TestRunner {
 			if (match[2] === 'PASS') {
 				testPassed = true;
 				run.passed(node);
+			} else if (match[2].startsWith('IGNORE')) {
+				testPassed = true;
+				run.skipped(node);
+				node.description = match[2];
 			} else {
 				let testFailRegex = new RegExp(this.testFailLineNrRegex + '.*' + node.id + '.*' + this.testResultString);
 				match = testFailRegex.exec(runResult);
