@@ -39,7 +39,7 @@
           "type": "boolean",
           "default": true,
           "scope": "resource"
-        },        
+        },
         "unityExplorer.debugConfiguration": {
           "markdownDescription": "Configuration to run when debugging tests.",
           "type": "string",
@@ -144,8 +144,8 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "20.10.0",
     "@types/vscode": "^1.84.2",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
     "@vscode/test-electron": "^2.3.8",
     "eslint": "^8.54.0",
     "glob": "8.1.0",
