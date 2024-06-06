@@ -106,7 +106,7 @@ export class TestRunner {
 			run.errored(node, new vscode.TestMessage(runResult.stderr));
 			return;
 		}
-		
+
 		let preBuildCommand = ConfigurationProvider.getString('preBuildCommand', node.uri);
 
 		if (preBuildCommand !== '') {
@@ -163,7 +163,7 @@ export class TestRunner {
 			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
 			return;
 		}
-		
+
 		let preBuildCommand = ConfigurationProvider.getString('preBuildCommand', node.uri);
 
 		if (preBuildCommand !== '') {
@@ -178,8 +178,8 @@ export class TestRunner {
 			return;
 		}
 		else {
-		let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
-		this._debugTestExecutable = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex);
+			let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
+			this._debugTestExecutable = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex);
 			if (!await vscode.debug.startDebugging(ConfigurationProvider.getWorkspace(node.uri), debugConfiguration)) {
 				vscode.window.showErrorMessage('Debugger could not be started.');
 			}
