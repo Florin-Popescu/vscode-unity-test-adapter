@@ -92,6 +92,7 @@ export class TestRunner {
 		run: vscode.TestRun
 	): Promise<any> {
 		if (node.uri === undefined) {
+			run.appendOutput('Test error. See test run details for more info.');
 			run.errored(node, new vscode.TestMessage('Cannot find test executable.'));
 			return;
 		}
@@ -102,6 +103,7 @@ export class TestRunner {
 			return;
 		}
 		else if (runResult.error) {
+			run.appendOutput('Test error. See test run details for more info.');
 			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
 			run.errored(node, new vscode.TestMessage(runResult.stderr));
 			return;
@@ -112,6 +114,7 @@ export class TestRunner {
 		if (preBuildCommand !== '') {
 			let result = await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), preBuildCommand);
 			if (result.error) {
+				run.appendOutput('Test error. See test run details for more info.');
 				vscode.window.showErrorMessage('Cannot run pre-build command.');
 				return;
 			}
@@ -130,6 +133,7 @@ export class TestRunner {
 		}
 
 		if (runResult.error && runResult.error.signal) {
+			run.appendOutput('Test error. See test run details for more info.');
 			run.errored(node, new vscode.TestMessage('Cannot run test executable.'));
 			run.errored(node, new vscode.TestMessage(runResult.error.stack));
 			return;
@@ -212,6 +216,7 @@ export class TestRunner {
 			}
 
 			if (testFilePassed === true) {
+				run.appendOutput('Test passed.');
 				run.passed(node);
 			}
 			else {
