@@ -97,6 +97,21 @@ export class TestRunner {
 			return;
 		}
 
+		let preBuildCommand = ConfigurationProvider.getString('preBuildCommand', node.uri);
+
+		if (preBuildCommand !== '') {
+			let result = await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), preBuildCommand);
+
+			if (run.token.isCancellationRequested) {
+				return;
+			}
+			else if (result.error) {
+				run.appendOutput('Test error. See test run details for more info.');
+				vscode.window.showErrorMessage('Cannot run pre-build command.');
+				return;
+			}
+		}
+
 		let runResult = await this.buildTest(node);
 
 		if (run.token.isCancellationRequested) {
@@ -106,21 +121,6 @@ export class TestRunner {
 			run.appendOutput('Test error. See test run details for more info.');
 			run.errored(node, new vscode.TestMessage('Cannot build test executable.'));
 			run.errored(node, new vscode.TestMessage(runResult.stderr));
-			return;
-		}
-
-		let preBuildCommand = ConfigurationProvider.getString('preBuildCommand', node.uri);
-
-		if (preBuildCommand !== '') {
-			let result = await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), preBuildCommand);
-			if (result.error) {
-				run.appendOutput('Test error. See test run details for more info.');
-				vscode.window.showErrorMessage('Cannot run pre-build command.');
-				return;
-			}
-		}
-
-		if (run.token.isCancellationRequested) {
 			return;
 		}
 		else if (node.canResolveChildren) {
