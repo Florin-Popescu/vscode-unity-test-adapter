@@ -93,8 +93,7 @@ export class TestLoader {
 		}
 	}
 
-	async parseTestsInFileContents(controller: vscode.TestController, file: vscode.TestItem | undefined): Promise<vscode.TestItem[]> {
-		let testSuite = new Array<vscode.TestItem>;
+	async parseTestsInFileContents(controller: vscode.TestController, file: vscode.TestItem | undefined) {
 		if (file !== undefined && file.uri !== undefined) {
 			file.busy = true;
 			const testRegex = new RegExp(ConfigurationProvider.getString('testCaseRegex', file.uri), 'gm');
@@ -118,8 +117,6 @@ export class TestLoader {
 			}
 			file.busy = false;
 		}
-
-		return testSuite;
 	}
 
 	async loadAllTests(controller: vscode.TestController) {
