@@ -15,7 +15,7 @@ export class TestLoader {
 		vscode.workspace.onDidSaveTextDocument(document => {
 			let docNodes: string[] = [];
 			this.controller.items.forEach(item => {
-				if(item.uri?.toString() === document.uri.toString()) {
+				if (item.uri?.toString() === document.uri.toString()) {
 					docNodes.push(item.id);
 				}
 			});
@@ -84,7 +84,7 @@ export class TestLoader {
 	}
 
 	private parseTestsInDocument(document: vscode.TextDocument) {
-		var isEnabled = ConfigurationProvider.getBoolean('enable',document.uri, true);
+		var isEnabled = ConfigurationProvider.getBoolean('enable', document.uri, true);
 		var fileMatch = new RegExp(ConfigurationProvider.getString('testSourceFileRegex', document.uri)).test(document.uri.fsPath);
 		var folderMatch = document.uri.fsPath.includes(ConfigurationProvider.getPath('testSourceFolder', document.uri));
 
