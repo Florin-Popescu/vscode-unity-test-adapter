@@ -147,7 +147,8 @@ export class TestLoader {
 					watcher.onDidDelete(uri => controller.items.delete(uri.toString()));
 
 					for (const file of await vscode.workspace.findFiles(pattern)) {
-						this.getOrCreateTestFile(file);
+						let testFile = this.getOrCreateTestFile(file);
+						this.parseTestsInFileContents(this.controller, testFile);
 					}
 
 					return watcher;
