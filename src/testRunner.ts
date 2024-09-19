@@ -339,7 +339,7 @@ export class TestRunner {
 		if (node.uri !== undefined) {
 			let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
 			let testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs', node.uri);
-			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex) + '\"';
+			let exePath = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex);
 			let testcaseArg = testExecutableArgs;
 
 			if (node.id.match(',')) {
