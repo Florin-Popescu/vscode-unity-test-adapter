@@ -329,7 +329,7 @@ export class TestRunner {
 		if (node.uri !== undefined) {
 			let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
 			let testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs', node.uri);
-			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex) + '\"';
+			let exePath = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex);
 
 			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + testExecutableArgs);
 		}
@@ -339,19 +339,19 @@ export class TestRunner {
 		if (node.uri !== undefined) {
 			let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
 			let testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs', node.uri);
-			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex) + '\"';
+			let exePath = path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex);
 			let testcaseArg = testExecutableArgs;
 
 			if (node.id.match(',')) {
 				//Unity Fixture format
-				testcaseArg += ' -g ' + node.id.split(new RegExp(', +'))[0] + ' -n ' + node.id.split(new RegExp(', +'))[1];
+				testcaseArg += ' -n ' + node.id.split(new RegExp(', +'))[1];
 			}
 			else {
 				//Regular Unity format
 				testcaseArg += ' -n ' + node.id;
 			}
 
-			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + testExecutableArgs);
+			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + testcaseArg);
 		}
 	}
 
