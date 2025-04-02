@@ -340,15 +340,14 @@ export class TestRunner {
 			let testExecutableRegex = ConfigurationProvider.getString('testExecutableRegex', node.uri);
 			let testExecutableArgs = ConfigurationProvider.getString('testExecutableArgs', node.uri);
 			let exePath = '\"' + path.parse(node.uri.fsPath).name.replace(new RegExp('(.*)'), testExecutableRegex) + '\"';
-			let testcaseArg = testExecutableArgs;
 
 			if (node.id.match(',')) {
 				//Unity Fixture format
-				testcaseArg += ' -g ' + node.id.split(new RegExp(', +'))[0] + ' -n ' + node.id.split(new RegExp(', +'))[1];
+				testExecutableArgs += ' -g ' + node.id.split(new RegExp(', +'))[0] + ' -n ' + node.id.split(new RegExp(', +'))[1];
 			}
 			else {
 				//Regular Unity format
-				testcaseArg += ' -n ' + node.id;
+				testExecutableArgs += ' -n ' + node.id;
 			}
 
 			return await this.runCommand(ConfigurationProvider.getWorkspace(node.uri), exePath + ' ' + testExecutableArgs);
