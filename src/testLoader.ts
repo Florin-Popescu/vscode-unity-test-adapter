@@ -158,7 +158,7 @@ export class TestLoader {
 
 	private setTestLabel(testName: string, uri: vscode.Uri): string {
 		let testLabel = testName;
-		let prettyTestCaseRegex = ConfigurationProvider.getString('testSourceFileRegex', uri);
+		let prettyTestCaseRegex = ConfigurationProvider.getString('prettyTestCaseRegex', uri);
 
 		if (prettyTestCaseRegex !== '') {
 			const labeltestLabelRegex = new RegExp(prettyTestCaseRegex);
